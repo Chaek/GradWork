@@ -1,0 +1,10 @@
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\WebSocketsClientServer.exe.config
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\WebSocketsClientServer.exe
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\WebSocketsClientServer.pdb
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\websocket-sharp.dll
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\websocket-sharp.xml
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\obj\Debug\WebSocket.Server.csprojResolveAssemblyReference.cache
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\obj\Debug\WebSocketsClientServer.exe
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\obj\Debug\WebSocketsClientServer.pdb
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\Newtonsoft.Json.dll
+C:\Users\ankar_000\Desktop\asp.net\WebSocketsClientServer\WebSocketsClientServer\bin\Debug\Newtonsoft.Json.xml

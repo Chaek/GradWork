@@ -1,0 +1,3 @@
+bgitgehjgo.database.windows.net : servername
+ankarenkosergey : login
+111567032Qwerty :password
