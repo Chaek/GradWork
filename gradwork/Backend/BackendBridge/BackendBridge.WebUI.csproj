@@ -251,6 +251,8 @@
     <Content Include="Content\Site.css" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
+    <None Include="Properties\PublishProfiles\ankarenko-bridge - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\ankarenko-bridge - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\scanbridge - FTP %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\scanbridge - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\scanbridge - Web Deploy %282%29.pubxml" />
