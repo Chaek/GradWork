@@ -1,7 +1,10 @@
 ﻿using BackendBridge.Domain.Abstract;
 using BackendBridge.Domain.Entity;
+using BackendBridge.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -36,14 +39,28 @@ namespace BackendBridge.Controllers
 
             return Ok(product);
         }
-        
-        public IHttpActionResult PostProduct(Product item)
+
+
+        public IHttpActionResult PostProduct(Protocol obj)
         {
-            if (item == null)
+            if (obj == null)
             {
                 throw new ArgumentNullException("item");
             }
-            repository.Add(item);
+
+            States state = obj.state;
+            switch (state)
+            {
+                case States.Error:
+                    break;
+                case States.Message:
+                    Product prod = (Product)obj.data;
+                    repository.Add(prod);
+                    break;
+                case States.Picture:
+                    break;
+
+            }
             return Ok();
         }
         

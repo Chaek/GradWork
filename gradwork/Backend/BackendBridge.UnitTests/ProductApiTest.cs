@@ -1,6 +1,7 @@
 ﻿using BackendBridge.Controllers;
 using BackendBridge.Domain.Abstract;
 using BackendBridge.Domain.Entity;
+using BackendBridge.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System;
@@ -69,7 +70,9 @@ namespace BackendBridge.UnitTests
             mock.Verify(m => m.Remove(3));
         }
 
+        /*
         [TestMethod]
+
         public void Can_Post_Product()
         {
             //arrange
@@ -86,6 +89,36 @@ namespace BackendBridge.UnitTests
             // Assert
             mock.Verify(m => m.Add(prod));
         }
+        */
+
+        [TestMethod]
+
+        public void Can_Post_Product()
+        {
+            //arrange
+            Mock<IProductRepository> mock = new Mock<IProductRepository>();
+            ProductApiController controller = new ProductApiController(mock.Object);
+            Product prod = new Product()
+            {
+                ProductID = 1,
+                Name = "Name",
+                Description = "dsdsa",
+                Price = 2,
+                Category = "dsdas"
+            };
+
+            Protocol protocol = new Protocol {
+                state = States.Message,
+                mes = "Hello",
+                data = prod
+            };
+            // Act
+            controller.PostProduct(protocol);
+
+            // Assert
+            mock.Verify(m => m.Add(prod));
+        }
+
 
     }
 }
