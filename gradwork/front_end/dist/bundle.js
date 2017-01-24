@@ -45,10 +45,10 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var React = __webpack_require__(1);
-	var ReactDOM = __webpack_require__(2);
-	var Hello_1 = __webpack_require__(3);
-	ReactDOM.render(React.createElement(Hello_1.Hello, { compiler: "TypeScript", framework: "React" }), document.getElementById("example"));
+	const React = __webpack_require__(1);
+	const ReactDOM = __webpack_require__(2);
+	const Hello_1 = __webpack_require__(3);
+	ReactDOM.render(React.createElement(Hello_1.default, { url: "http://ankarenko-bridge.azurewebsites.net/api/productapi" }), document.getElementById("example"));
 
 
 /***/ },
@@ -68,30 +68,55 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var __extends = (this && this.__extends) || function (d, b) {
-	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-	    function __() { this.constructor = d; }
-	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-	};
-	var React = __webpack_require__(1);
-	// 'HelloProps' describes the shape of props.
-	// State is never set so we use the 'undefined' type.
-	var Hello = (function (_super) {
-	    __extends(Hello, _super);
-	    function Hello() {
-	        return _super !== null && _super.apply(this, arguments) || this;
+	const React = __webpack_require__(1);
+	class Hello extends React.Component {
+	    constructor(props) {
+	        console.log("constructor");
+	        super(props);
+	        this.state = {
+	            data: "Waiting"
+	        };
+	        this.get = this.get.bind(this);
 	    }
-	    Hello.prototype.render = function () {
-	        return React.createElement("h1", null,
-	            "Hello from ",
-	            this.props.compiler,
-	            " and ",
-	            this.props.framework,
-	            "!");
-	    };
-	    return Hello;
-	}(React.Component));
-	exports.Hello = Hello;
+	    componentWillMount() {
+	        console.log("mount");
+	        console.log(this);
+	        this.get(this.props.url)
+	            .then((response) => {
+	            /*
+	             Uncaught (in promise) TypeError: Cannot read property 'setState' of undefined
+	                at get.then.err.setState.data
+	            */
+	            this.setState({ data: response });
+	        }, function (err) {
+	            this.setState({ data: err });
+	        });
+	    }
+	    get(url) {
+	        return new Promise(function (resolve, reject) {
+	            var req = new XMLHttpRequest();
+	            req.open('GET', url);
+	            req.onload = function () {
+	                if (req.status == 200) {
+	                    resolve(req.response);
+	                }
+	                else {
+	                    reject(Error(req.statusText));
+	                }
+	            };
+	            req.onerror = function () { reject(Error("Network Error")); };
+	            req.send();
+	        });
+	    }
+	    render() {
+	        console.log("constructor");
+	        return (React.createElement("h1", null,
+	            " Result : ",
+	            this.state.data));
+	    }
+	}
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = Hello;
 
 
 /***/ }
