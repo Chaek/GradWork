@@ -3,7 +3,10 @@ import * as ReactDOM from "react-dom";
 import counter from './reducers/counter';
 import {createStore} from 'redux'
 import Hello  from "./components/Hello";
-import deepFreeze = require('deep-freeze');
+import * as deepFreeze from 'deep-freeze';
+import * as expect from 'expect';
+
+
 
 /*
 const store = createStore(counter);
@@ -35,11 +38,22 @@ function data(state:IDataState[] = [], action:IDataAction) {
     switch (action.type) {
         case ActionType.INCREMENT:
             //state.push({value: action.value});
-            return [...state, action.value];
+            return [...state, {value:action.value}];
         default:
             return state;
     }
 }
+
+const dataTests = () => {
+    const before:IDataState[] = [];
+    const after:IDataState[] = [{value: 1}];
+
+    deepFreeze(before);
+    expect(data(before, {type:ActionType.INCREMENT, value:1})).toEqual(after);
+}
+
+dataTests();
+console.log("All tests passed");
 
 const store = createStore(data);
 store.subscribe(() => { 
