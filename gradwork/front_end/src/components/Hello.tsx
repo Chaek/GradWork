@@ -3,6 +3,9 @@ import * as React from "react";
 export interface HelloProps { url: string; }
 export interface HelloState { data: string; }
 
+import { createStore } from 'redux'
+
+
 class Hello extends React.Component<HelloProps, HelloState> {
     constructor(props: HelloProps){
         console.log("constructor");
