@@ -13,7 +13,7 @@ using System.Web.Http.Cors;
 
 namespace BackendBridge.Controllers
 {
-    [EnableCors(origins: "http://localhost:8000", headers: "*", methods: "*")]
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class ProductApiController : ApiController
     {
         public IProductRepository repository;
