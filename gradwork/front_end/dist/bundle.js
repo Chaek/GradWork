@@ -47,15 +47,42 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const ReactDOM = __webpack_require__(2);
-	const counter_1 = __webpack_require__(3);
-	const redux_1 = __webpack_require__(4);
-	const Hello_1 = __webpack_require__(26);
-	const store = redux_1.createStore(counter_1.default);
+	const redux_1 = __webpack_require__(3);
+	const Hello_1 = __webpack_require__(25);
+	const freeze = __webpack_require__(26);
+	/*
+	const store = createStore(counter);
+	store.subscribe(() => {
+	    console.log(store.getState());
+	});
+	
+	document.addEventListener('click', () => {
+	    store.dispatch({type: 'INCREMENT'})
+	})*/
+	let globalCounter = 0;
+	var ActionType;
+	(function (ActionType) {
+	    ActionType[ActionType["INCREMENT"] = 1] = "INCREMENT";
+	    ActionType[ActionType["DICREMENT"] = 2] = "DICREMENT";
+	})(ActionType || (ActionType = {}));
+	;
+	function data(state = [], action) {
+	    freeze(state);
+	    switch (action.type) {
+	        case ActionType.INCREMENT:
+	            state.push({ value: action.value });
+	        //return [...state, action.value];
+	        default:
+	            return state;
+	    }
+	}
+	const store = redux_1.createStore(data);
 	store.subscribe(() => {
 	    console.log(store.getState());
 	});
 	document.addEventListener('click', () => {
-	    store.dispatch({ type: 'INCREMENT' });
+	    store.dispatch({ type: ActionType.INCREMENT, value: globalCounter });
+	    globalCounter++;
 	});
 	ReactDOM.render(React.createElement(Hello_1.default, { url: "http://ankarenko-bridge.azurewebsites.net/api/productapi" }), document.getElementById("example"));
 
@@ -74,25 +101,6 @@
 
 /***/ },
 /* 3 */
-/***/ function(module, exports) {
-
-	"use strict";
-	function counter(state = 0, action = { type: '' }) {
-	    switch (action.type) {
-	        case 'INCREMENT':
-	            return state + 1;
-	        case 'DICREMENT':
-	            return state - 1;
-	        default:
-	            return state;
-	    }
-	}
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = counter;
-
-
-/***/ },
-/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -100,27 +108,27 @@
 	exports.__esModule = true;
 	exports.compose = exports.applyMiddleware = exports.bindActionCreators = exports.combineReducers = exports.createStore = undefined;
 	
-	var _createStore = __webpack_require__(6);
+	var _createStore = __webpack_require__(5);
 	
 	var _createStore2 = _interopRequireDefault(_createStore);
 	
-	var _combineReducers = __webpack_require__(21);
+	var _combineReducers = __webpack_require__(20);
 	
 	var _combineReducers2 = _interopRequireDefault(_combineReducers);
 	
-	var _bindActionCreators = __webpack_require__(23);
+	var _bindActionCreators = __webpack_require__(22);
 	
 	var _bindActionCreators2 = _interopRequireDefault(_bindActionCreators);
 	
-	var _applyMiddleware = __webpack_require__(24);
+	var _applyMiddleware = __webpack_require__(23);
 	
 	var _applyMiddleware2 = _interopRequireDefault(_applyMiddleware);
 	
-	var _compose = __webpack_require__(25);
+	var _compose = __webpack_require__(24);
 	
 	var _compose2 = _interopRequireDefault(_compose);
 	
-	var _warning = __webpack_require__(22);
+	var _warning = __webpack_require__(21);
 	
 	var _warning2 = _interopRequireDefault(_warning);
 	
@@ -141,10 +149,10 @@
 	exports.bindActionCreators = _bindActionCreators2['default'];
 	exports.applyMiddleware = _applyMiddleware2['default'];
 	exports.compose = _compose2['default'];
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -330,7 +338,7 @@
 
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -339,11 +347,11 @@
 	exports.ActionTypes = undefined;
 	exports['default'] = createStore;
 	
-	var _isPlainObject = __webpack_require__(7);
+	var _isPlainObject = __webpack_require__(6);
 	
 	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 	
-	var _symbolObservable = __webpack_require__(17);
+	var _symbolObservable = __webpack_require__(16);
 	
 	var _symbolObservable2 = _interopRequireDefault(_symbolObservable);
 	
@@ -596,12 +604,12 @@
 	}
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGetTag = __webpack_require__(8),
-	    getPrototype = __webpack_require__(14),
-	    isObjectLike = __webpack_require__(16);
+	var baseGetTag = __webpack_require__(7),
+	    getPrototype = __webpack_require__(13),
+	    isObjectLike = __webpack_require__(15);
 	
 	/** `Object#toString` result references. */
 	var objectTag = '[object Object]';
@@ -664,12 +672,12 @@
 
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(9),
-	    getRawTag = __webpack_require__(12),
-	    objectToString = __webpack_require__(13);
+	var Symbol = __webpack_require__(8),
+	    getRawTag = __webpack_require__(11),
+	    objectToString = __webpack_require__(12);
 	
 	/** `Object#toString` result references. */
 	var nullTag = '[object Null]',
@@ -698,10 +706,10 @@
 
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var root = __webpack_require__(10);
+	var root = __webpack_require__(9);
 	
 	/** Built-in value references. */
 	var Symbol = root.Symbol;
@@ -710,10 +718,10 @@
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var freeGlobal = __webpack_require__(11);
+	var freeGlobal = __webpack_require__(10);
 	
 	/** Detect free variable `self`. */
 	var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -725,7 +733,7 @@
 
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
@@ -736,10 +744,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(9);
+	var Symbol = __webpack_require__(8);
 	
 	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
@@ -788,7 +796,7 @@
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -816,10 +824,10 @@
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var overArg = __webpack_require__(15);
+	var overArg = __webpack_require__(14);
 	
 	/** Built-in value references. */
 	var getPrototype = overArg(Object.getPrototypeOf, Object);
@@ -828,7 +836,7 @@
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports) {
 
 	/**
@@ -849,7 +857,7 @@
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports) {
 
 	/**
@@ -884,14 +892,14 @@
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(18);
+	module.exports = __webpack_require__(17);
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, module) {'use strict';
@@ -900,7 +908,7 @@
 	  value: true
 	});
 	
-	var _ponyfill = __webpack_require__(20);
+	var _ponyfill = __webpack_require__(19);
 	
 	var _ponyfill2 = _interopRequireDefault(_ponyfill);
 	
@@ -923,10 +931,10 @@
 	
 	var result = (0, _ponyfill2['default'])(root);
 	exports['default'] = result;
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(19)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(18)(module)))
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports) {
 
 	module.exports = function(module) {
@@ -942,7 +950,7 @@
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -970,7 +978,7 @@
 	};
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -978,13 +986,13 @@
 	exports.__esModule = true;
 	exports['default'] = combineReducers;
 	
-	var _createStore = __webpack_require__(6);
+	var _createStore = __webpack_require__(5);
 	
-	var _isPlainObject = __webpack_require__(7);
+	var _isPlainObject = __webpack_require__(6);
 	
 	var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 	
-	var _warning = __webpack_require__(22);
+	var _warning = __webpack_require__(21);
 	
 	var _warning2 = _interopRequireDefault(_warning);
 	
@@ -1115,10 +1123,10 @@
 	    return hasChanged ? nextState : state;
 	  };
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1148,7 +1156,7 @@
 	}
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1204,7 +1212,7 @@
 	}
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1215,7 +1223,7 @@
 	
 	exports['default'] = applyMiddleware;
 	
-	var _compose = __webpack_require__(25);
+	var _compose = __webpack_require__(24);
 	
 	var _compose2 = _interopRequireDefault(_compose);
 	
@@ -1267,7 +1275,7 @@
 	}
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1310,7 +1318,7 @@
 	}
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1365,6 +1373,26 @@
 	}
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = Hello;
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports) {
+
+	module.exports = function deepFreeze (o) {
+	  Object.freeze(o);
+	
+	  Object.getOwnPropertyNames(o).forEach(function (prop) {
+	    if (o.hasOwnProperty(prop)
+	    && o[prop] !== null
+	    && (typeof o[prop] === "object" || typeof o[prop] === "function")
+	    && !Object.isFrozen(o[prop])) {
+	      deepFreeze(o[prop]);
+	    }
+	  });
+	  
+	  return o;
+	};
 
 
 /***/ }
