@@ -1,12 +1,229 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import counter from './reducers/counter';
-import {createStore} from 'redux'
-import Hello  from "./components/Hello";
+import * as fetch from 'isomorphic-fetch';
+import { combineReducers } from 'redux'
 import * as deepFreeze from 'deep-freeze';
 import * as expect from 'expect';
+import thunkMiddleware from 'redux-thunk';
+import * as createLogger from 'redux-logger';
+import { createStore, applyMiddleware } from 'redux';
+//export const rootReducer
+//export const runTests
+
+//ACTIONS
+const RECEIVE_MODEL = 'RECEIVE_MODEL'
+const SELECT_MODEL_TYPE = 'SELECT_MODEL_TYPE'
+const REQUEST_MODEL = 'REQUEST_MODEL'
+
+interface IResponseModel {
+    mes:string,
+    data:any[]
+}
+
+const selectedModelType = (modelType: string) => {
+    return {
+        type: SELECT_MODEL_TYPE,
+        modelType
+    }
+}
+
+const requestPosts = (modelType: string) => {
+  return {
+    type: REQUEST_MODEL,
+    modelType
+  }
+}
+
+const receivePosts = (modelType: string, response:IResponseModel) => {
+  return {
+    type: RECEIVE_MODEL,
+    modelType,
+    items: response.data,
+    //receivedAt: Date.now()
+  }
+}
+
+//REDUCERS
+//any should be replaced on a normal type in the future
+const modelTypeSelected = (state:string = 'text', action:any) => {
+  switch (action.type) {
+    case SELECT_MODEL_TYPE:
+      return action.modelType;
+    default:
+      return state
+  }
+}
+
+const items = (state:any = {
+  isFetching: false,
+  items: []
+}, action:any) => {
+  switch (action.type) {
+    case REQUEST_MODEL:
+      return Object.assign({}, state, {
+        isFetching: true
+      })
+    case RECEIVE_MODEL:
+      return Object.assign({}, state, {
+        isFetching: false,
+        items: action.items
+      })
+    default:
+      return state
+  }
+}
+
+const itemsByModel = (state:any = {}, action:any) => {
+  switch (action.type) {
+    case REQUEST_MODEL:
+    case RECEIVE_MODEL:
+      return Object.assign({}, state, {
+        [action.modelType]: items(state[action.modelType], action)
+      })
+    default:
+      return state
+  }
+}
+
+const rootReducer = combineReducers({
+  modelTypeSelected,
+  itemsByModel
+})
+
+//TESTS
+const test_modelTypeSelected = () => {
+    let stateBefore = "text";
+    let stateAfter = "text";
+    let action = selectedModelType("text")
+
+    deepFreeze(stateBefore);
+    expect(modelTypeSelected(stateBefore, action)).toEqual(stateAfter);
+}
+
+const test_items = () => {
+    //initialization
+    let stateBefore:any = { 
+        isFetching: false,
+        items: []
+    }
+
+    deepFreeze(stateBefore);
+
+    //REQUEST_MODEL
+    let stateAfter:any = {
+        isFetching: true,
+        items: []
+    }
+
+    let action = requestPosts("text");
+    expect(items(stateBefore, action)).toEqual(stateAfter);
+
+    //RECEIVE_MODEL
+    const json:string = '{"mes": "Hello", "data" : [{"a":1}, {"b":"hello"}]}';
+    const inModel:IResponseModel = JSON.parse(json);
+
+    stateAfter = {
+        isFetching: false,
+        items: [{a:1}, {b:"hello"}]
+    }
+
+    action = receivePosts("text", inModel);
+    expect(items(stateBefore, action)).toEqual(stateAfter);
+}
+
+const test_itemsByModel = () => {
+    //initialization
+    let stateBefore:any = { 
+        images: {
+            isFetching:true,
+            items: []
+        },
+
+        emails: {
+            isFetching:false,
+            items: [1, 2, 3, 4]
+        },
+
+        text: {
+            isFetching: false,
+            items: ["hello", "Bye", "How are you?"]
+        }
+    }
+
+    deepFreeze(stateBefore);
+
+    //REQUEST_MODEL
+    let stateAfter:any = {
+        images: {
+            isFetching:true,
+            items: []
+        },
+
+        emails: {
+            isFetching:false,
+            items: [1, 2, 3, 4]
+        },
+
+        text: {
+            isFetching: true,
+            items: ["hello", "Bye", "How are you?"]
+        }
+    }
+
+    let action = requestPosts("text");
+    expect(itemsByModel(stateBefore, action)).toEqual(stateAfter);
+
+    //RECEIVE_MODEL
+}
+
+const runTests = () => {
+    test_modelTypeSelected();
+    test_items();
+    test_itemsByModel();
+    console.log("All tests have been passed");
+}
 
 
+//thunk function
+const fetchPosts = (modelType:string) =>
+    (dispatch:any) => { 
+        dispatch(requestPosts(modelType))
+    
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/productapi`)
+               .then(response => response.text())
+               //should be edited
+               .then(json => dispatch(receivePosts(modelType, { mes: "super", data: JSON.parse(json)})))
+    }
+
+
+const loggerMiddleware = createLogger()
+
+const store = createStore(
+  rootReducer,
+  applyMiddleware(
+    thunkMiddleware, // lets us dispatch() functions
+    loggerMiddleware // neat middleware that logs actions
+  )
+)
+
+
+store.dispatch(selectedModelType('text'))
+store.dispatch(fetchPosts('text')).then(() => console.log(store.getState()))
+store.dispatch(fetchPosts('images')).then(() => console.log(store.getState()))
+
+
+
+/*
+fetch('//offline-news-api.herokuapp.com/stories')
+    .then(function(response) {
+        if (response.status >= 400) {
+            throw new Error("Bad response from server");
+        }
+        return response.json();
+    })
+    .then(function(stories) {
+        console.log(stories);
+    });
 
 /*
 const store = createStore(counter);
@@ -18,67 +235,224 @@ document.addEventListener('click', () => {
     store.dispatch({type: 'INCREMENT'})
 })*/
 
+/*
+function invalidateSubreddit(subreddit:any) {
+  return {
+    type: "dasdsa",
+    subreddit
+  }
+}
+
+console.log(invalidateSubreddit({a:4, b:7}));
+
+
+const get = (url:string) => {  
+    return new Promise(function(resolve, reject) {
+        var req = new XMLHttpRequest();
+        req.open('GET', url);
+
+        req.onload = function() {
+            if (req.status == 200) { 
+                resolve(req.response); 
+            } else { 
+                reject(Error(req.statusText)); 
+            }
+        };
+
+        req.onerror = function() { reject(Error("Network Error")); };
+        req.send();
+    });
+}
+
 let globalCounter:number = 0;
 
-enum ActionType {
-    INCREMENT = 1,
-    DICREMENT
+enum DataAction {
+    GET,
+    DELETE,
+    POST,
 }
 
 interface IDataState {
-    value:number;
+    ProductId:number,
+    Description:string,
+    Price:number,
+    Category:string
 }
 
+/*
+ public int ProductID { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+        public string Category { get; set; }
+*/
+
+/*
 interface IDataAction {
-    type: ActionType;
-    value: number;
+    type: DataAction;
+    val: IDataState;
 };
 
-function data(state:IDataState[] = [], action:IDataAction) {
+let globalUrl = "ankarenko-bridge.azurewebsites.net/api/productapi";
+//const store = createStore(productReducer);
+
+const productReducer = (state:IDataState[] = [], action:IDataAction) => {
     switch (action.type) {
-        case ActionType.INCREMENT:
-            //state.push({value: action.value});
-            return [...state, {value:action.value}];
+        case DataAction.GET:
+            return state;
+        case DataAction.DELETE:
+            let i = state.findIndex((val)=>{ return val.ProductId == action.val.ProductId });
+            return [...state.slice(0, i), ...state.slice(i + 1)]; 
+        case DataAction.POST:
+            return [...state, action.val];
         default:
             return state;
     }
 }
 
-const dataTests = () => {
-    const before:IDataState[] = [];
-    const after:IDataState[] = [{value: 1}];
+const testPostProductReducer = () => {
+    let val1 = {
+        ProductId:1,
+        Description:"description",
+        Price:100,
+        Category:"category"
+    };
+
+    let val2 = {
+        ProductId:2,
+        Description:"description",
+        Price:100,
+        Category:"category"
+    };
+
+    let before:IDataState[] = [val1, val2];
+    let after:IDataState[] = [val1, val2, val2];
 
     deepFreeze(before);
-    expect(data(before, {type:ActionType.INCREMENT, value:1})).toEqual(after);
+
+    expect(productReducer(before, {
+        type:DataAction.POST,
+        val:val2
+    })).toEqual(after);
 }
 
-dataTests();
+const testDeleteProductReducer = () => {
+    let val1 = {
+        ProductId:1,
+        Description:"description",
+        Price:100,
+        Category:"category"
+    };
+
+    let val2 = {
+        ProductId:2,
+        Description:"description",
+        Price:100,
+        Category:"category"
+    };
+
+    let before:IDataState[] = [val1, val2];
+    let after:IDataState[] = [val1];
+
+    deepFreeze(before);
+
+    expect(productReducer(before, {
+        type:DataAction.DELETE,
+        val:val2
+    })).toEqual(after);
+}
+
+const testGetProductReducer = () => {
+    
+}
+
+
+testPostProductReducer();
+testDeleteProductReducer();
+testGetProductReducer();
 console.log("All tests passed");
 
-const store = createStore(data);
+/*
+const store = createStore(productReducer);
 store.subscribe(() => { 
     console.log(store.getState());
 });
 
 document.addEventListener('click', () => {
-    store.dispatch({type: ActionType.INCREMENT, value: globalCounter})
+    store.dispatch({type: DataAction.POST, value: globalCounter})
     globalCounter++;
 })
+*/
+
+/*
+interface IAppProps {
+    data: IDataState[]
+}
+
+class App extends React.Component<IAppProps, any> {
+    constructor(props: IAppProps){
+        super(props);
+    }
+
+    public render() {
+        return (
+            <div>
+                <button onClick = {() => {
+                    store.dispatch({
+                        type: DataAction.GET
+                    })}}> 
+                GET 
+                </button>
+                
+                <button onClick = {() => {
+                    store.dispatch({
+                        type: DataAction.DELETE
+                    })}}> 
+                DELETE 
+                </button>
+
+                <button onClick = {() => {
+                    store.dispatch({
+                        type: DataAction.POST
+                    })}}> 
+                POST 
+                </button>
+
+                <ul>
+                    {this.props.data.map((val)=>{<li>{val.value}</li>})}
+                </ul>
+        </div>);
+    }
+}
+
+const render = () => {
+    ReactDOM.render(
+    <App data = {store.getState()} />,
+    document.getElementById("example"))
+};
 
 
+store.subscribe(render);
+render();
+    /*
+    ReactDOM.render(
+        <div>
+            <button onClick = {() => {
+                store.dispatch({
+                    type: DataAction.GET
+                })}}> 
+            GET 
+            </button>
+            <ul>
+                {this.props.data.map((val)=>{<li key = {data}></li>})}
+            </ul>
+        
+        </div>,
+    document.getElementById("example")
+    );*/
 
-
-
-
-
-
-
-
-
-
-
-
+/*
 ReactDOM.render(
     <Hello url = "http://ankarenko-bridge.azurewebsites.net/api/productapi" />,
     document.getElementById("example")
-);
+);*/
