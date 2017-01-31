@@ -85,11 +85,6 @@ const itemsByModel = (state:any = {}, action:any) => {
   }
 }
 
-const rootReducer = combineReducers({
-  modelTypeSelected,
-  itemsByModel
-})
-
 //TESTS
 const test_modelTypeSelected = () => {
     let stateBefore = "text";
@@ -196,7 +191,89 @@ const fetchPosts = (modelType:string) =>
     }
 
 
+class GetMenu extends React.Component<any, any> {
+    private MODEL_OPTIONS:string[] = ["PRODUCTS", "TEXT", "IMAGES"];
+    private model:string = this.props.store.getState().modelTypeSelected; 
+    private data:any[];
+    private res:any;
+
+    public render() {
+        return (
+            <div> Get Menu <br/>
+                <select onChange = {val => this.props.store.dispatch(selectedModelType(val.target.value))}>
+                    {this.MODEL_OPTIONS.map(option => <option>{option}</option>)}
+                </select> 
+                <button onClick = {()=> 
+                    this.props.store.dispatch(fetchPosts(this.model))
+                    .then(()=>{
+                        this.data = this.props.store.getState().itemsByModel[this.model].items;
+                        this.res = <ul>{this.data.map(val=><div><li>{val.Name}</li><button>Delete</button></div>)}</ul>
+                        render();    
+                        
+                    })
+                    }> Update </button>
+                    {this.res}
+
+
+            </div>
+        )
+    }    
+}
+
+
+class PostMenu extends React.Component<any, any> {
+    public render() {
+        return (
+            <div> Post Menu </div>
+        )
+    }    
+}
+
+class MyApp extends React.Component<any, any> {
+    private REQUEST_OPTIONS:string[] = ["POST", "GET"];
+    private SERVER_OPTIONS:string[] = ["REMOTE", "LOCAL"];
+
+    public render() {
+        let request:string = this.props.store.getState().connectionParameters.request;
+        let menu = (request == "POST")? <PostMenu/> : <GetMenu store={store}/>;
+
+        return (
+            <div>
+                <select onChange = {val => this.props.store.dispatch({type: CHANGE_REQUEST_TYPE, data: val.target.value})}>
+                    {this.REQUEST_OPTIONS.map(option => <option>{option}</option>)}
+                </select>
+                
+                <select onChange = {val => this.props.store.dispatch({type: CHANGE_SERVER_TYPE, data: val.target.value})}>
+                    {this.SERVER_OPTIONS.map(option => <option>{option}</option>)}
+                </select>
+                {menu}
+            </div>
+        );
+    }    
+}
+
+
+//react REDUCERS
+const CHANGE_REQUEST_TYPE = "CHANGE_REQUEST_TYPE";
+const CHANGE_SERVER_TYPE = "CHANGE_SERVER_TYPE";
+const connectionParameters = (state:any = {server:"REMOTE", request:"GET"}, action:any) => {
+    switch (action.type) {
+        case CHANGE_REQUEST_TYPE:
+            return Object.assign({}, state, {request:action.data})
+        case CHANGE_SERVER_TYPE:
+            return Object.assign({}, state, {server:action.data})
+        default:
+            return state;
+    }
+}
+
 const loggerMiddleware = createLogger()
+
+const rootReducer = combineReducers({
+  connectionParameters,
+  modelTypeSelected,
+  itemsByModel
+})
 
 const store = createStore(
   rootReducer,
@@ -207,12 +284,6 @@ const store = createStore(
 )
 
 
-store.dispatch(selectedModelType('text'))
-store.dispatch(fetchPosts('text')).then(() => console.log(store.getState()))
-store.dispatch(fetchPosts('images')).then(() => console.log(store.getState()))
-
-/*
-ReactDOM.render(
-    <Hello url = "http://ankarenko-bridge.azurewebsites.net/api/productapi" />,
-    document.getElementById("example")
-);*/
+const render = () => ReactDOM.render(<MyApp store = {store}/>, document.getElementById("example"));
+render();
+store.subscribe(render);
