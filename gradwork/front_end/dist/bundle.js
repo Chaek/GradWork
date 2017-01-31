@@ -81,7 +81,7 @@
 	};
 	//REDUCERS
 	//any should be replaced on a normal type in the future
-	const modelTypeSelected = (state = 'text', action) => {
+	const modelTypeSelected = (state = 'product', action) => {
 	    switch (action.type) {
 	        case SELECT_MODEL_TYPE:
 	            return action.modelType;
@@ -193,26 +193,30 @@
 	    console.log("All tests have been passed");
 	};
 	//thunk function
-	const fetchPosts = (modelType) => (dispatch) => {
+	const fetchPosts = (model) => (dispatch) => {
+	    dispatch(requestPosts(model));
+	    return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}`, { method: 'GET' })
+	        .then(response => response.json())
+	        .then((json) => { console.log("dasdsadas" + json); dispatch(receivePosts(model, { mes: "super", data: json.data })); });
+	};
+	const deletePost = (modelType, id) => (dispatch) => {
 	    dispatch(requestPosts(modelType));
-	    return fetch(`http://ankarenko-bridge.azurewebsites.net/api/productapi`)
-	        .then(response => response.text())
-	        .then(json => dispatch(receivePosts(modelType, { mes: "super", data: JSON.parse(json) })));
+	    return fetch(`http://ankarenko-bridge.azurewebsites.net/api/product`, { method: 'DELETE' })
+	        .then(() => { console.log("Deleted"); fetchPosts(modelType); });
 	};
 	class GetMenu extends React.Component {
 	    constructor() {
 	        super(...arguments);
-	        this.MODEL_OPTIONS = ["PRODUCTS", "TEXT", "IMAGES"];
-	        this.model = this.props.store.getState().modelTypeSelected;
+	        this.MODEL_OPTIONS = ["PRODUCT", "TEXT", "IMAGES"];
 	    }
 	    render() {
 	        return (React.createElement("div", null,
 	            " Get Menu ",
 	            React.createElement("br", null),
 	            React.createElement("select", { onChange: val => this.props.store.dispatch(selectedModelType(val.target.value)) }, this.MODEL_OPTIONS.map(option => React.createElement("option", null, option))),
-	            React.createElement("button", { onClick: () => this.props.store.dispatch(fetchPosts(this.model))
+	            React.createElement("button", { onClick: () => this.props.store.dispatch(fetchPosts(this.props.store.getState().modelTypeSelected))
 	                    .then(() => {
-	                    this.data = this.props.store.getState().itemsByModel[this.model].items;
+	                    this.data = this.props.store.getState().itemsByModel[this.props.store.getState().modelTypeSelected].items;
 	                    this.res = React.createElement("ul", null, this.data.map(val => React.createElement("div", null,
 	                        React.createElement("li", null, val.Name),
 	                        React.createElement("button", null, "Delete"))));

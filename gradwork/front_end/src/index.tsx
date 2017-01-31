@@ -45,7 +45,7 @@ const receivePosts = (modelType: string, response:IResponseModel) => {
 
 //REDUCERS
 //any should be replaced on a normal type in the future
-const modelTypeSelected = (state:string = 'text', action:any) => {
+const modelTypeSelected = (state:string = 'product', action:any) => {
   switch (action.type) {
     case SELECT_MODEL_TYPE:
       return action.modelType;
@@ -180,20 +180,26 @@ const runTests = () => {
 
 
 //thunk function
-const fetchPosts = (modelType:string) =>
+const fetchPosts = (model:string) =>
     (dispatch:any) => { 
-        dispatch(requestPosts(modelType))
+        dispatch(requestPosts(model))
     
-        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/productapi`)
-               .then(response => response.text())
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}`, {method:'GET'})
+               .then(response => response.json())
                //should be edited
-               .then(json => dispatch(receivePosts(modelType, { mes: "super", data: JSON.parse(json)})))
+               .then((json:any) => {console.log("dasdsadas" + json); dispatch(receivePosts(model, { mes: "super", data: json.data}))})
+    }
+
+const deletePost = (modelType:string, id:number) =>
+    (dispatch:any) => {
+        dispatch(requestPosts(modelType))
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/product`, {method:'DELETE'})
+                .then(()=>{console.log("Deleted"); fetchPosts(modelType)})
     }
 
 
 class GetMenu extends React.Component<any, any> {
-    private MODEL_OPTIONS:string[] = ["PRODUCTS", "TEXT", "IMAGES"];
-    private model:string = this.props.store.getState().modelTypeSelected; 
+    private MODEL_OPTIONS:string[] = ["PRODUCT", "TEXT", "IMAGES"];
     private data:any[];
     private res:any;
 
@@ -204,17 +210,15 @@ class GetMenu extends React.Component<any, any> {
                     {this.MODEL_OPTIONS.map(option => <option>{option}</option>)}
                 </select> 
                 <button onClick = {()=> 
-                    this.props.store.dispatch(fetchPosts(this.model))
+                    this.props.store.dispatch(fetchPosts(this.props.store.getState().modelTypeSelected))
                     .then(()=>{
-                        this.data = this.props.store.getState().itemsByModel[this.model].items;
+                        this.data = this.props.store.getState().itemsByModel[this.props.store.getState().modelTypeSelected].items;
                         this.res = <ul>{this.data.map(val=><div><li>{val.Name}</li><button>Delete</button></div>)}</ul>
                         render();    
                         
                     })
                     }> Update </button>
                     {this.res}
-
-
             </div>
         )
     }    
