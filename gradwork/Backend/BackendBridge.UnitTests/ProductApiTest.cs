@@ -29,7 +29,7 @@ namespace BackendBridge.UnitTests
                 Price = 4
             });
 
-            ProductApiController controller = new ProductApiController(mock.Object);
+            ProductController controller = new ProductController(mock.Object);
 
             // Act
             IHttpActionResult actionResult = controller.GetProduct(2);
@@ -46,7 +46,7 @@ namespace BackendBridge.UnitTests
         {
             // Arrange
             Mock<IProductRepository> mock = new Mock<IProductRepository>();
-            ProductApiController controller = new ProductApiController(mock.Object);
+            ProductController controller = new ProductController(mock.Object);
 
             // Act
             IHttpActionResult actionResult = controller.GetProduct(2);
@@ -61,7 +61,7 @@ namespace BackendBridge.UnitTests
         {
             //arrange
             Mock<IProductRepository> mock = new Mock<IProductRepository>();
-            ProductApiController controller = new ProductApiController(mock.Object);
+            ProductController controller = new ProductController(mock.Object);
 
             // Act
             controller.DeleteProduct(3);
@@ -97,7 +97,7 @@ namespace BackendBridge.UnitTests
         {
             //arrange
             Mock<IProductRepository> mock = new Mock<IProductRepository>();
-            ProductApiController controller = new ProductApiController(mock.Object);
+            ProductController controller = new ProductController(mock.Object);
             Product prod = new Product()
             {
                 ProductID = 1,
