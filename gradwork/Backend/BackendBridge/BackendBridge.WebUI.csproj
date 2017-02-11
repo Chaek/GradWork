@@ -266,12 +266,14 @@
     <Compile Include="App_Start\ReactConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\ImageController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\NinjectDependencyResolver.cs" />
     <Compile Include="Models\Protocol.cs" />
+    <Compile Include="Models\ResponseModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -298,6 +300,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Helpers\Abstract\" />
     <Folder Include="Helpers\Concrete\" />
+    <Folder Include="Views\Image\" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

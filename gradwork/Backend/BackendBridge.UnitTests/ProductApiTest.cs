@@ -32,13 +32,14 @@ namespace BackendBridge.UnitTests
             ProductController controller = new ProductController(mock.Object);
 
             // Act
-            IHttpActionResult actionResult = controller.GetProduct(2);
-            var contentResult = actionResult as OkNegotiatedContentResult<Product>;
+            IHttpActionResult actionResult = controller.Get(2);
+            //bad
+            var contentResult = actionResult as OkNegotiatedContentResult<ResponseModel<Product>>;
 
             // Assert
             Assert.IsNotNull(contentResult);
-            Assert.IsNotNull(contentResult.Content);
-            Assert.AreEqual("Name2", contentResult.Content.Name);
+            Assert.IsNotNull(contentResult.Content.data);
+            Assert.AreEqual("Name2", contentResult.Content.data.Name);
         }
 
         [TestMethod]
@@ -49,7 +50,7 @@ namespace BackendBridge.UnitTests
             ProductController controller = new ProductController(mock.Object);
 
             // Act
-            IHttpActionResult actionResult = controller.GetProduct(2);
+            IHttpActionResult actionResult = controller.Get(2);
             var contentResult = actionResult as OkNegotiatedContentResult<Product>;
 
             // Assert
@@ -64,7 +65,7 @@ namespace BackendBridge.UnitTests
             ProductController controller = new ProductController(mock.Object);
 
             // Act
-            controller.DeleteProduct(3);
+            controller.Remove(3);
 
             // Assert
             mock.Verify(m => m.Remove(3));
@@ -107,13 +108,14 @@ namespace BackendBridge.UnitTests
                 Category = "dsdas"
             };
 
+            /*
             Protocol protocol = new Protocol {
                 state = States.Message,
                 mes = "Hello",
                 data = prod
-            };
+            };*/
             // Act
-            controller.PostProduct(protocol);
+            controller.Add(prod);
 
             // Assert
             mock.Verify(m => m.Add(prod));

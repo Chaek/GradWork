@@ -24,10 +24,16 @@ namespace BackendBridge.Controllers
 
         public IHttpActionResult GetAll()
         {
-            return Ok(repository.Products);
+            ResponseModel<IEnumerable<Product>> res = new ResponseModel<IEnumerable<Product>> {
+                mes = "All products!",
+                type = DataType.PRODUCT,
+                data = repository.Products,
+            };
+
+            return Ok(res);
         }
         
-        public IHttpActionResult GetProduct(int id)
+        public IHttpActionResult Get(int id)
         {
             var product = repository.Get(id);
             //var product = repository.Products.FirstOrDefault((p) => p.ProductID == id);
@@ -37,34 +43,30 @@ namespace BackendBridge.Controllers
                 return NotFound();
             }
 
-            return Ok(product);
+            ResponseModel<Product> res = new ResponseModel<Product>
+            {
+                mes = "Concrete product",
+                type = DataType.PRODUCT,
+                data = product,
+            };
+
+            return Ok(res);
         }
 
 
-        public IHttpActionResult PostProduct(Protocol obj)
+        public IHttpActionResult Add(Product prod)
         {
-            if (obj == null)
+            if (prod == null)
             {
                 throw new ArgumentNullException("item");
             }
 
-            States state = obj.state;
-            switch (state)
-            {
-                case States.Error:
-                    break;
-                case States.Message:
-                    Product prod = (Product)obj.data;
-                    repository.Add(prod);
-                    break;
-                case States.Picture:
-                    break;
-
-            }
+            //try catch
+            repository.Add(prod);
             return Ok();
         }
         
-        public IHttpActionResult DeleteProduct(int id)
+        public IHttpActionResult Remove(int id)
         {
             repository.Remove(id);
             return Ok();
