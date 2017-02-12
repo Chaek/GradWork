@@ -8,3 +8,13 @@ C:\Users\ankar_000\Desktop\asp.net\adam_freeman\BackendBridge\BackendBridge.Doma
 C:\Users\ankar_000\Desktop\asp.net\adam_freeman\BackendBridge\BackendBridge.Domain\obj\Release\BackendBridge.Domain.csprojResolveAssemblyReference.cache
 C:\Users\ankar_000\Desktop\asp.net\adam_freeman\BackendBridge\BackendBridge.Domain\obj\Release\BackendBridge.Domain.dll
 C:\Users\ankar_000\Desktop\asp.net\adam_freeman\BackendBridge\BackendBridge.Domain\obj\Release\BackendBridge.Domain.pdb
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\BackendBridge.Domain.dll.config
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\BackendBridge.Domain.dll
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\BackendBridge.Domain.pdb
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\EntityFramework.dll
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\EntityFramework.SqlServer.dll
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\EntityFramework.xml
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Release\EntityFramework.SqlServer.xml
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Release\BackendBridge.Domain.csprojResolveAssemblyReference.cache
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Release\BackendBridge.Domain.dll
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Release\BackendBridge.Domain.pdb

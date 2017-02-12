@@ -10,13 +10,14 @@ namespace BackendBridge.Domain.Concrete
 {
     public class EFProductRepository : IProductRepository
     {
+
         static int counter = 0;
         public EFProductRepository()
         {
             System.Diagnostics.Debug.WriteLine(string.Format("Instance {0} created", ++counter));
         }
 
-        private EFDbContext context = new EFDbContext();
+        private EFDbContext context = null; //new EFDbContext();
         public IEnumerable<Product> Products
         {
             get { return context.Products; }

@@ -121,6 +121,27 @@ namespace BackendBridge.UnitTests
             mock.Verify(m => m.Add(prod));
         }
 
+        [TestMethod]
+
+        public void Can_Post_Image()
+        {
+            //arrange
+            Mock<IImageRepository> mock = new Mock<IImageRepository>();
+            ImageController controller = new ImageController(mock.Object);
+            Image prod = new Image()
+            {
+                ID = 1,
+                Name = "Name",
+                Data = "Data"
+            };
+
+            // Act
+            controller.Add(prod);
+
+            // Assert
+            mock.Verify(m => m.Add(prod));
+        }
+
 
     }
 }

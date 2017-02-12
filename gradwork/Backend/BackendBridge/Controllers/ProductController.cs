@@ -22,6 +22,7 @@ namespace BackendBridge.Controllers
             this.repository = productRepository;
         }
 
+        [System.Web.Http.HttpGet]
         public IHttpActionResult GetAll()
         {
             ResponseModel<IEnumerable<Product>> res = new ResponseModel<IEnumerable<Product>> {
@@ -32,7 +33,8 @@ namespace BackendBridge.Controllers
 
             return Ok(res);
         }
-        
+
+        [System.Web.Http.HttpGet]
         public IHttpActionResult Get(int id)
         {
             var product = repository.Get(id);
@@ -53,7 +55,7 @@ namespace BackendBridge.Controllers
             return Ok(res);
         }
 
-
+        [System.Web.Http.HttpPost]
         public IHttpActionResult Add(Product prod)
         {
             if (prod == null)
@@ -65,7 +67,8 @@ namespace BackendBridge.Controllers
             repository.Add(prod);
             return Ok();
         }
-        
+
+        [System.Web.Http.HttpDelete]
         public IHttpActionResult Remove(int id)
         {
             repository.Remove(id);

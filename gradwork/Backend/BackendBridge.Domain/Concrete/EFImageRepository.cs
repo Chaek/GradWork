@@ -18,7 +18,7 @@ namespace BackendBridge.Domain.Concrete
         }
 
         public void Add(Image image)
-        {
+        {    
             if (image.ID == 0)
             {
                 m_context.Images.Add(image);
@@ -30,7 +30,7 @@ namespace BackendBridge.Domain.Concrete
                 {
                     dbEntry.Name = image.Name;
                     dbEntry.ID = image.ID;
-                    dbEntry.Content = image.Content;
+                    dbEntry.Data = image.Data;
                     //data
                 }
             }

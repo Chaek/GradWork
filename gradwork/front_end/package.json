@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/isomorphic-fetch": "0.0.32",
+    "@types/node": "^7.0.5",
     "@types/react": "^15.0.2",
     "@types/react-dom": "^0.14.21",
     "deep-freeze": "0.0.1",
@@ -19,12 +20,16 @@
     "react-redux": "^5.0.2",
     "redux": "^3.6.0",
     "redux-logger": "^2.7.4",
-    "redux-thunk": "^2.2.0"
+    "redux-thunk": "^2.2.0",
+    "ws": "^2.0.3"
   },
   "devDependencies": {
     "@types/deep-freeze": "0.0.29",
+    "@types/react-native": "^0.37.11",
     "@types/redux-logger": "^2.6.34",
     "@types/redux-thunk": "^2.1.0",
+    "@types/websocket": "0.0.32",
+    "@types/ws": "0.0.38",
     "awesome-typescript-loader": "^3.0.0-beta.18",
     "redux-devtools": "^3.3.2",
     "source-map-loader": "^0.1.6",

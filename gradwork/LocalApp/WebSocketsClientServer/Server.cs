@@ -10,7 +10,7 @@ namespace WebSocketsClientServer
     {
         static void Main(string[] args)
         {
-            var wssv = new WebSocketServer("ws://localhost:80");
+            var wssv = new WebSocketServer("ws://localhost:8000");
             wssv.AddWebSocketService<Echo>("/Echo");
             wssv.AddWebSocketService<Chat>("/Chat");
             wssv.AddWebSocketService<GiveMeJson>("/GiveMeJson");

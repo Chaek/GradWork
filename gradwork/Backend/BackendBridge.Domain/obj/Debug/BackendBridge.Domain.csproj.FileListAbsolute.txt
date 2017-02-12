@@ -15,6 +15,6 @@ C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\De
 C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Debug\EntityFramework.SqlServer.dll
 C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Debug\EntityFramework.xml
 C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\bin\Debug\EntityFramework.SqlServer.xml
-C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Debug\BackendBridge.Domain.csprojResolveAssemblyReference.cache
 C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Debug\BackendBridge.Domain.dll
 C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Debug\BackendBridge.Domain.pdb
+C:\Users\ankar_000\Desktop\gradwork\gradwork\Backend\BackendBridge.Domain\obj\Debug\BackendBridge.Domain.csprojResolveAssemblyReference.cache

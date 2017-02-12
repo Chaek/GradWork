@@ -19,17 +19,31 @@ namespace BackendBridge.Controllers
         {
             this.repository = imageRepository;
         }
-        
-        public IHttpActionResult GetAll()
+
+        [System.Web.Http.HttpGet]
+        public IHttpActionResult All()
         {
             ResponseModel<IEnumerable<Image> > res = new ResponseModel<IEnumerable<Image> >
             {
-                mes = "All products!",
+                mes = "All images!",
                 type = DataType.PRODUCT,
                 data = repository.m_images,
             };
 
             return Ok(res);
+        }
+
+        [System.Web.Http.HttpPost]
+        public IHttpActionResult Post(Image image)
+        {
+            if (image == null)
+            {
+                throw new ArgumentNullException("item");
+            }
+
+            //try catch
+            repository.Add(image);
+            return Ok();
         }
     }
 }

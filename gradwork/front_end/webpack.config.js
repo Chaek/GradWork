@@ -12,8 +12,12 @@ module.exports = {
         // Add '.ts' and '.tsx' as resolvable extensions.
         extensions: ["", ".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
     },
+    
 
     module: {
+        //there are problems with ws
+        noParse: ['ws'],
+        externals: ['ws'],
         loaders: [
             // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
             { test: /\.tsx?$/, loader: "awesome-typescript-loader" }
@@ -33,4 +37,9 @@ module.exports = {
         "react": "React",
         "react-dom": "ReactDOM"
     },
+    "exclude": [
+        "typings/browser.d.ts",
+        "typings/browser",
+        "node_modules"
+    ]
 };

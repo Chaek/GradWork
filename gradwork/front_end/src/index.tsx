@@ -7,13 +7,141 @@ import * as expect from 'expect';
 import thunkMiddleware from 'redux-thunk';
 import * as createLogger from 'redux-logger';
 import { createStore, applyMiddleware } from 'redux';
+import * as websocket from 'ws'
 //export const rootReducer
 //export const runTests
+ 
+ ///////////////////////////////////////////////////
+const ws = new websocket('ws://localhost:8000/GiveMeJson');
+ 
+ws.on('open', function open() {
+  ws.send('something');
+});
+ 
+ws.on('message', function incoming(data, flags) {
+    console.log(data)
+  // flags.binary will be set if a binary data is received. 
+  // flags.masked will be set if the data was masked. 
+});
+///////////////////////////////////////////////////////////////
+
+
+
+
+interface Image {
+    ID:number,
+    Name:string,
+    Data:string //byte array (images)
+}
+
+interface ResponseModel<T> {
+    mes:string,
+    type:number,
+    data:T[]
+}
+
+interface IAction {
+    type:string,
+    model?:ResponseModel<Image>,
+}
+
+interface IState {
+    isFetching: boolean,
+    items: string[] //images
+}
+
+interface IAppProps {
+    store:any
+}
 
 //ACTIONS
 const RECEIVE_MODEL = 'RECEIVE_MODEL'
 const SELECT_MODEL_TYPE = 'SELECT_MODEL_TYPE'
 const REQUEST_MODEL = 'REQUEST_MODEL'
+const ADDED_MODEL = 'ADDED_MODEL'
+
+const defaultState:IState = {
+    isFetching: false,
+    items: []
+}
+
+//Reducer
+function imageReducer(state:IState = defaultState, action:IAction) {
+    switch (action.type) {
+        case ADDED_MODEL:
+        case RECEIVE_MODEL:
+            return { isFetching: false, items: action.model.data.map(m => m.Data)}
+        case REQUEST_MODEL:
+            return Object.assign({}, state, {isFetching: true})
+        default: 
+            return state
+    }
+}
+
+//Thunk function
+function getImages(model:string) {
+    return function (dispatch:any) { 
+        dispatch({ type: REQUEST_MODEL })
+        //return!!!
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}/all`, {method:'GET', mode: 'cors'})
+               .then(response => response.json())
+               //why can't assign to ResponseModel<Image>?
+               .then(json => dispatch({ type: RECEIVE_MODEL, model: json }))
+               .catch(() => {})
+    }
+}
+
+//main
+const loggerMiddleware = createLogger()
+
+const reducer = combineReducers({
+    imageReducer
+})
+
+const imageStore = createStore(
+  imageReducer,
+  applyMiddleware(
+    thunkMiddleware, // lets us dispatch() functions
+    loggerMiddleware // neat middleware that logs actions
+  )
+)
+
+
+//imageStore.dispatch(getImages("image")).then(() => console.log("succeded!")) 
+
+class App extends React.Component<IAppProps, any> {
+    items:string[] //bad
+
+    public render() {
+        this.items = this.props.store.getState().items
+        return (
+            <div>
+                <button onClick = {() => { 
+                    this.props.store.dispatch(getImages('image')) 
+                }}>
+                Update
+                </button>
+                <br/>
+                {this.items.map(val =><img src = {val}/>)}
+
+            </div>
+        );
+    }
+}
+
+function render() { 
+    ReactDOM.render(<App store = {imageStore}/>, 
+                    document.getElementById("example")); 
+}
+
+
+imageStore.subscribe(render)
+render();
+
+/*
+
+
+
 
 interface IResponseModel {
     mes:string,
@@ -271,8 +399,6 @@ const connectionParameters = (state:any = {server:"REMOTE", request:"GET"}, acti
     }
 }
 
-const loggerMiddleware = createLogger()
-
 const rootReducer = combineReducers({
   connectionParameters,
   modelTypeSelected,
@@ -291,3 +417,4 @@ const store = createStore(
 const render = () => ReactDOM.render(<MyApp store = {store}/>, document.getElementById("example"));
 render();
 store.subscribe(render);
+*/

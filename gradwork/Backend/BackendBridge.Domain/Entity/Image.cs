@@ -10,7 +10,7 @@ namespace BackendBridge.Domain.Entity
     {
         public int ID { get; set; }
         public string Name { get; set; }
-        public byte[] Content { get; set; }
+        public string Data { get; set; }
         
     }
 }
