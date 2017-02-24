@@ -52,45 +52,12 @@
 	const redux_thunk_1 = __webpack_require__(27);
 	const createLogger = __webpack_require__(28);
 	const redux_2 = __webpack_require__(5);
-	//export const rootReducer
-	//export const runTests
-	///////////////////////////////////////////////////
-	var url = 'ws://localhost:8000/GiveImage';
-	function wsConnect(url) {
-	    return new Promise((resolve, reject) => {
-	        var ws = new WebSocket(url);
-	        ws.onerror = (error) => {
-	            reject(error);
-	        };
-	        ws.onopen = () => {
-	            alert("Connected!");
-	            resolve(ws);
-	        };
-	        ws.onmessage = (msg) => {
-	            resolve(msg.data);
-	        };
-	        ws.onclose = () => {
-	            reject(new Error("Connection has been closed!"));
-	        };
-	    });
-	}
-	function wsFetch(msg, ws) {
-	    return new Promise((resolve, reject) => {
-	        ws.onmessage = (msg) => {
-	            resolve(msg.data);
-	        };
-	        ws.onerror = (error) => {
-	            reject(error);
-	        };
-	        ws.send(msg);
-	    });
-	}
-	wsConnect(url).then((ws) => ws.send("dsad")).then((msg) => console.log(msg));
 	//ACTIONS
 	const RECEIVE_MODEL = 'RECEIVE_MODEL';
 	const SELECT_MODEL_TYPE = 'SELECT_MODEL_TYPE';
 	const REQUEST_MODEL = 'REQUEST_MODEL';
 	const ADDED_MODEL = 'ADDED_MODEL';
+	const IMAGE = 1;
 	const defaultState = {
 	    isFetching: false,
 	    items: []
@@ -99,20 +66,55 @@
 	function imageReducer(state = defaultState, action) {
 	    switch (action.type) {
 	        case ADDED_MODEL:
+	            //I don't no if this efficient 
+	            return {
+	                isFetching: false,
+	                items: [...state.items, ...action.model.data.map(m => m.Data)]
+	            };
 	        case RECEIVE_MODEL:
-	            return { isFetching: false, items: action.model.data.map(m => m.Data) };
+	            return {
+	                isFetching: false,
+	                items: action.model.data.map(m => m.Data)
+	            };
 	        case REQUEST_MODEL:
 	            return Object.assign({}, state, { isFetching: true });
 	        default:
 	            return state;
 	    }
 	}
+	//websockets
+	var url = 'ws://localhost:8000/GiveImage';
+	const ws = new WebSocket(url);
+	ws.onerror = (err) => {
+	    console.log("Error : " + err.error);
+	};
+	ws.onopen = () => {
+	    ws.send("Hey");
+	    console.log("Open!");
+	};
+	ws.onmessage = (msg) => {
+	    let data = JSON.parse(msg.data);
+	    switch (data.type) {
+	        case IMAGE:
+	            //Don't know if this works
+	            console.log(data);
+	            imageStore.dispatch({ type: ADDED_MODEL, model: data });
+	            break;
+	        default:
+	            //console.log("Another type has been encountered!");
+	            break;
+	    }
+	    let model = msg.data;
+	};
+	ws.onclose = () => {
+	    console.log("Close!");
+	};
 	//Thunk function
 	function getImages(model) {
 	    return function (dispatch) {
 	        dispatch({ type: REQUEST_MODEL });
 	        //return!!!
-	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}/all`, { method: 'GET', mode: 'cors' })
+	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}/all`)
 	            .then(response => response.json())
 	            .then(json => dispatch({ type: RECEIVE_MODEL, model: json }))
 	            .catch(() => { });
@@ -144,10 +146,6 @@
 	imageStore.subscribe(render);
 	render();
 	/*
-	
-	
-	
-	
 	interface IResponseModel {
 	    mes:string,
 	    data:any[]
