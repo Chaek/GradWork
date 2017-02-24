@@ -37,6 +37,9 @@ module.exports = {
         "react": "React",
         "react-dom": "ReactDOM"
     },
+    node: {
+        fs: "empty"
+    },
     "exclude": [
         "typings/browser.d.ts",
         "typings/browser",

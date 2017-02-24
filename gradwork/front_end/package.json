@@ -13,6 +13,7 @@
     "@types/node": "^7.0.5",
     "@types/react": "^15.0.2",
     "@types/react-dom": "^0.14.21",
+    "bufferutil": "^2.0.1",
     "deep-freeze": "0.0.1",
     "isomorphic-fetch": "^2.2.1",
     "react": "^15.4.2",
@@ -21,6 +22,7 @@
     "redux": "^3.6.0",
     "redux-logger": "^2.7.4",
     "redux-thunk": "^2.2.0",
+    "utf-8-validate": "^3.0.1",
     "ws": "^2.0.3"
   },
   "devDependencies": {

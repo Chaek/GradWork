@@ -12,18 +12,49 @@ import * as websocket from 'ws'
 //export const runTests
  
  ///////////////////////////////////////////////////
-const ws = new websocket('ws://localhost:8000/GiveMeJson');
- 
-ws.on('open', function open() {
-  ws.send('something');
-});
- 
-ws.on('message', function incoming(data, flags) {
-    console.log(data)
-  // flags.binary will be set if a binary data is received. 
-  // flags.masked will be set if the data was masked. 
-});
-///////////////////////////////////////////////////////////////
+
+
+
+var url = 'ws://localhost:8000/GiveImage';
+
+function wsConnect(url:string) {
+    return new Promise((resolve, reject)=>{
+        var ws = new WebSocket(url);
+        ws.onerror = (error) => {
+            reject(error)
+        }
+
+        ws.onopen = () => {
+            alert("Connected!");
+            resolve(ws);
+        }
+
+        ws.onmessage = (msg) => {
+            resolve(msg.data);
+        }
+
+        ws.onclose = () => {
+            reject(new Error("Connection has been closed!"));
+        }
+    });
+}
+
+function wsFetch(msg:string, ws:WebSocket) {
+    return new Promise((resolve, reject) => {
+        ws.onmessage = (msg) => {
+            resolve(msg.data);
+        }
+
+        ws.onerror = (error) => {
+            reject(error)
+        }
+
+        ws.send(msg);
+    });
+}
+
+wsConnect(url).then((ws:WebSocket) => wsFetch("Hello", ws)).then((msg)=>console.log(msg));
+//////////////////////
 
 
 
