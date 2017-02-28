@@ -54,30 +54,49 @@
 	const redux_2 = __webpack_require__(5);
 	//ACTIONS
 	const RECEIVE_MODEL = 'RECEIVE_MODEL';
-	const SELECT_MODEL_TYPE = 'SELECT_MODEL_TYPE';
+	const SELECT_SUBMODEL = 'SELECT_SUBMODEL';
 	const REQUEST_MODEL = 'REQUEST_MODEL';
 	const ADDED_MODEL = 'ADDED_MODEL';
+	const IMAGE_SUBMODEL = 'IMAGE';
+	const PRINTER_INFO_SUBMODEL = 'PRINTER_INFO';
+	const PRINTER_SUBMODEL = 'PRINTER';
 	const IMAGE = 1;
-	const defaultState = {
+	const startModel = {
 	    isFetching: false,
+	    isActual: true,
 	    items: []
 	};
 	//Reducer
-	function imageReducer(state = defaultState, action) {
+	function models(state = startModel, action) {
 	    switch (action.type) {
-	        case ADDED_MODEL:
-	            //I don't no if this efficient 
-	            return {
-	                isFetching: false,
-	                items: [...state.items, ...action.model.data.map(m => m.Data)]
-	            };
 	        case RECEIVE_MODEL:
 	            return {
 	                isFetching: false,
+	                isActual: true,
+	                lastUpdated: Date.now(),
 	                items: action.model.data.map(m => m.Data)
 	            };
 	        case REQUEST_MODEL:
 	            return Object.assign({}, state, { isFetching: true });
+	        default:
+	            return state;
+	    }
+	}
+	function selectedSubmodel(state = IMAGE_SUBMODEL, action) {
+	    switch (action.type) {
+	        case (SELECT_SUBMODEL):
+	            return action.submodel;
+	        default:
+	            return state;
+	    }
+	}
+	function modelsBySubmodel(state = {}, action) {
+	    switch (action.type) {
+	        case RECEIVE_MODEL:
+	        case REQUEST_MODEL:
+	            return Object.assign({}, state, {
+	                [action.submodel]: models(state[action.submodel], action)
+	            });
 	        default:
 	            return state;
 	    }
@@ -98,7 +117,7 @@
 	        case IMAGE:
 	            //Don't know if this works
 	            console.log(data);
-	            imageStore.dispatch({ type: ADDED_MODEL, model: data });
+	            store.dispatch({ type: ADDED_MODEL, model: data });
 	            break;
 	        default:
 	            //console.log("Another type has been encountered!");
@@ -110,41 +129,79 @@
 	    console.log("Close!");
 	};
 	//Thunk function
-	function getImages(model) {
+	function getImages(submodel) {
 	    return function (dispatch) {
 	        dispatch({ type: REQUEST_MODEL });
 	        //return!!!
-	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}/all`)
+	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
 	            .then(response => response.json())
-	            .then(json => dispatch({ type: RECEIVE_MODEL, model: json }))
+	            .then(json => dispatch({ submodel, type: RECEIVE_MODEL, model: json }))
 	            .catch(() => { });
 	    };
 	}
 	//main
 	const loggerMiddleware = createLogger();
 	const reducer = redux_1.combineReducers({
-	    imageReducer
+	    selectedSubmodel,
+	    modelsBySubmodel
 	});
-	const imageStore = redux_2.createStore(imageReducer, redux_2.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
+	const store = redux_2.createStore(reducer, redux_2.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
 	loggerMiddleware // neat middleware that logs actions
 	));
-	//imageStore.dispatch(getImages("image")).then(() => console.log("succeded!")) 
-	class App extends React.Component {
+	store.dispatch({ type: "SELECT_SUBMODEL", submodel: IMAGE_SUBMODEL });
+	class MainMenu extends React.Component {
 	    render() {
-	        this.items = this.props.store.getState().items;
 	        return (React.createElement("div", null,
 	            React.createElement("button", { onClick: () => {
-	                    this.props.store.dispatch(getImages('image'));
-	                } }, "Update"),
-	            React.createElement("br", null),
-	            this.items.map(val => React.createElement("img", { src: val }))));
+	                    store.dispatch({ type: SELECT_SUBMODEL, submodel: PRINTER_SUBMODEL });
+	                } }, "Printer menu"),
+	            React.createElement("button", { onClick: () => {
+	                    store.dispatch({ type: SELECT_SUBMODEL, submodel: IMAGE_SUBMODEL });
+	                } }, "Image menu")));
 	    }
 	}
-	function render() {
-	    ReactDOM.render(React.createElement(App, { store: imageStore }), document.getElementById("example"));
+	class ImageMenu extends React.Component {
+	    render() {
+	        return (React.createElement("div", null,
+	            React.createElement("br", null),
+	            "ImageMenu invoked!",
+	            React.createElement("br", null),
+	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
+	            React.createElement("button", { onClick: () => {
+	                    store.dispatch(getImages(IMAGE_SUBMODEL));
+	                } }, "Update"),
+	            React.createElement("br", null),
+	            this.props.items.map(m => React.createElement("img", { src: m }))));
+	    }
 	}
-	imageStore.subscribe(render);
-	render();
+	class PrinterMenu extends React.Component {
+	    render() {
+	        return (React.createElement("div", null,
+	            React.createElement("br", null),
+	            "PrinterMenu has been invoked!",
+	            React.createElement("br", null),
+	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back")));
+	    }
+	}
+	//provider should be used instead
+	function renderManager() {
+	    let state = store.getState();
+	    let submodel = state.selectedSubmodel;
+	    let items = (submodel in state.modelsBySubmodel) ?
+	        state.modelsBySubmodel[submodel].items : [];
+	    switch (submodel) {
+	        case PRINTER_SUBMODEL:
+	            ReactDOM.render(React.createElement(PrinterMenu, { items: items }), document.getElementById("example"));
+	            break;
+	        case IMAGE_SUBMODEL:
+	            ReactDOM.render(React.createElement(ImageMenu, { items: items }), document.getElementById("example"));
+	            break;
+	        default:
+	            ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example"));
+	    }
+	}
+	store.subscribe(renderManager);
+	ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example"));
 	/*
 	interface IResponseModel {
 	    mes:string,

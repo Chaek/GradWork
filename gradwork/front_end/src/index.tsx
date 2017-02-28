@@ -10,11 +10,17 @@ import { createStore, applyMiddleware } from 'redux';
 //export const rootReducer
 //export const runTests
 
+interface IData {
+    Data:string
+}
 
-interface Image {
+interface IAction {
+    type:string, 
+}
+
+interface Image extends IData {
     ID:number,
-    Name:string,
-    Data:string //byte array (images)
+    Name:string
 }
 
 interface ResponseModel<T> {
@@ -23,49 +29,75 @@ interface ResponseModel<T> {
     data:T[]
 }
 
-interface IAction {
-    type:string,
-    model?:ResponseModel<Image>,
-}
-
-interface IState {
-    isFetching: boolean,
-    items: string[] //images
-}
-
 interface IAppProps {
     store:any
 }
 
 //ACTIONS
 const RECEIVE_MODEL = 'RECEIVE_MODEL'
-const SELECT_MODEL_TYPE = 'SELECT_MODEL_TYPE'
+const SELECT_SUBMODEL = 'SELECT_SUBMODEL'
 const REQUEST_MODEL = 'REQUEST_MODEL'
 const ADDED_MODEL = 'ADDED_MODEL'
-
+const IMAGE_SUBMODEL = 'IMAGE'
+const PRINTER_INFO_SUBMODEL = 'PRINTER_INFO'
+const PRINTER_SUBMODEL = 'PRINTER'
 const IMAGE:number = 1;
 
-const defaultState:IState = {
+const startModel:IModelS = {
     isFetching: false,
+    isActual: true,
     items: []
 }
 
+interface IModelS {
+    isFetching: boolean,
+    isActual: boolean,
+    items: string[]
+    lastUpdated?: Date
+}
+
+interface IModelA extends IAction {
+    model?:ResponseModel<IData>,
+}
+
+interface ISubmodelA extends IAction {
+    submodel:string,
+}
+
 //Reducer
-function imageReducer(state:IState = defaultState, action:IAction) {
+function models<T>(state:IModelS = startModel, action:IModelA) {
     switch (action.type) {
-        case ADDED_MODEL:
-        //I don't no if this efficient 
-            return { 
-                isFetching: false, 
-                items: [...state.items, ...action.model.data.map(m => m.Data)]
-            }
         case RECEIVE_MODEL:
             return { 
                 isFetching: false, 
+                isActual: true,
+                lastUpdated: Date.now(),
                 items: action.model.data.map(m => m.Data)
             }
         case REQUEST_MODEL:
-            return Object.assign({}, state, {isFetching: true})
+            return Object.assign({}, state, { isFetching: true })
+        default: 
+            return state
+    }
+}
+
+function selectedSubmodel(state:string = IMAGE_SUBMODEL, action:ISubmodelA) {
+    switch (action.type) {
+        case (SELECT_SUBMODEL):
+            return action.submodel
+        default:
+            return state
+    }
+}
+
+function modelsBySubmodel(state:any = {}, action:ISubmodelA) {
+    switch (action.type) {
+        case RECEIVE_MODEL:
+        case REQUEST_MODEL:
+            return Object.assign({}, state, 
+            { 
+                [action.submodel]: models(state[action.submodel], action) 
+            })
         default: 
             return state
     }
@@ -89,7 +121,7 @@ ws.onmessage = (msg:MessageEvent) => {
         case IMAGE:
             //Don't know if this works
             console.log(data)
-            imageStore.dispatch({ type: ADDED_MODEL, model: data })
+            store.dispatch({ type: ADDED_MODEL, model: data })
             break;
         default:
             //console.log("Another type has been encountered!");
@@ -104,14 +136,14 @@ ws.onclose = () => {
 }
 
 //Thunk function
-function getImages(model:string) {
+function getImages(submodel:string) {
     return function (dispatch:any) { 
         dispatch({ type: REQUEST_MODEL })
         //return!!!
-        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${model}/all`)
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
                .then(response => response.json())
                //why can't assign to ResponseModel<Image>?
-               .then(json => dispatch({ type: RECEIVE_MODEL, model: json }))
+               .then(json => dispatch({ submodel, type: RECEIVE_MODEL, model: json }))
                .catch(() => {})
     }
 }
@@ -120,11 +152,12 @@ function getImages(model:string) {
 const loggerMiddleware = createLogger()
 
 const reducer = combineReducers({
-    imageReducer
+    selectedSubmodel,
+    modelsBySubmodel    
 })
 
-const imageStore = createStore(
-  imageReducer,
+const store = createStore(
+    reducer,
   applyMiddleware(
     thunkMiddleware, // lets us dispatch() functions
     loggerMiddleware // neat middleware that logs actions
@@ -132,36 +165,98 @@ const imageStore = createStore(
 )
 
 
-//imageStore.dispatch(getImages("image")).then(() => console.log("succeded!")) 
+store.dispatch({type:"SELECT_SUBMODEL", submodel:IMAGE_SUBMODEL}) 
 
-class App extends React.Component<IAppProps, any> {
-    items:string[] //bad
-
+class MainMenu extends React.Component<any, any> {
     public render() {
-        this.items = this.props.store.getState().items
         return (
             <div>
-                <button onClick = {() => { 
-                    this.props.store.dispatch(getImages('image')) 
+                <button onClick = {()=>{
+                    store.dispatch({type:SELECT_SUBMODEL, submodel:PRINTER_SUBMODEL});
                 }}>
-                Update
+                    Printer menu
                 </button>
-                <br/>
-                {this.items.map(val =><img src = {val}/>)}
-
+                
+                <button onClick = {()=>{
+                    store.dispatch({type:SELECT_SUBMODEL, submodel:IMAGE_SUBMODEL})
+                }}>
+                    Image menu
+                </button>
             </div>
         );
     }
 }
 
-function render() { 
-    ReactDOM.render(<App store = {imageStore}/>, 
-                    document.getElementById("example")); 
+interface IImageProps {
+    items:string[]
 }
 
+interface IPrinterProps {
+    items:string[]
+}
 
-imageStore.subscribe(render)
-render();
+class ImageMenu extends React.Component<IImageProps, any> {
+    public render() {
+        return (
+        <div>
+            <br/>ImageMenu invoked!<br/>
+            <button onClick = {()=>
+                ReactDOM.render(<MainMenu/>, 
+                document.getElementById("example"))}>
+            Back</button>
+            
+            <button onClick = {() => { 
+                    store.dispatch(getImages(IMAGE_SUBMODEL)) 
+                }}>
+            Update
+            </button>
+            <br/>
+            {this.props.items.map(m =><img src = {m}/>)}
+        </div>
+        );
+    }
+}
+
+class PrinterMenu extends React.Component<IPrinterProps, any> {
+    public render() {
+        return (
+        <div>
+        <br/>
+            PrinterMenu has been invoked! 
+        <br/>
+        <button onClick = {()=>
+            ReactDOM.render(<MainMenu/>, 
+            document.getElementById("example"))}>
+        Back</button>
+        </div>
+        );
+    }
+}
+
+//provider should be used instead
+function renderManager() {
+    let state:any = store.getState();
+    let submodel:string = state.selectedSubmodel; 
+    let items:string[] = (submodel in state.modelsBySubmodel)? 
+        state.modelsBySubmodel[submodel].items : [];
+
+    switch (submodel) {
+        case PRINTER_SUBMODEL:
+            ReactDOM.render(<PrinterMenu items = {items}/>, 
+            document.getElementById("example"));
+            break;
+        case IMAGE_SUBMODEL:
+            ReactDOM.render(<ImageMenu items = {items}/>, 
+            document.getElementById("example"));
+            break;
+        default:
+            ReactDOM.render(<MainMenu/>, 
+            document.getElementById("example"));
+    }
+}
+
+store.subscribe(renderManager)
+ReactDOM.render(<MainMenu/>, document.getElementById("example"));
 
 /*
 interface IResponseModel {
