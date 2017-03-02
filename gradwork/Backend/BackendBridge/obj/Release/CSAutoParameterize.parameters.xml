@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<parameters>
-  <parameter name="EFDbContext-Web.config Connection String" description="EFDbContext Connection String used in web.config by the application to access the database." defaultValue="Data Source=bridge-ankarenko.database.windows.net;Initial Catalog=bridge-ankarenko;User ID=bridge-ankarenko;Password=111567032Qwerty" tags="SqlConnectionString">
-    <parameterEntry kind="XmlFile" scope="C:\\Users\\ankar_000\\Desktop\\gradwork\\gradwork\\Backend\\BackendBridge\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='EFDbContext']/@connectionString" />
-  </parameter>
-</parameters>
