@@ -185,7 +185,8 @@
 	class MainMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("p", null, "MainMenu was invoked!"),
+	            React.createElement("p", null,
+	                React.createElement("h2", null, "Main menu")),
 	            React.createElement("button", { onClick: () => store.dispatch({ type: SELECT_SUBMODEL, submodel: PRINTER_SUBMODEL }) }, "Printer menu"),
 	            React.createElement("button", { onClick: () => store.dispatch({ type: SELECT_SUBMODEL, submodel: IMAGE_SUBMODEL }) }, "Image menu")));
 	    }
@@ -193,7 +194,8 @@
 	class ImageMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("p", null, "ImageMenu was invoked!"),
+	            React.createElement("p", null,
+	                React.createElement("h2", null, "Image Menu")),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
 	            React.createElement("button", { onClick: () => store.dispatch(getModels(IMAGE_SUBMODEL)) }, "Update from remote app"),
 	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_IMAGE_REMOTE)) }, "Update from local app"),
@@ -207,7 +209,8 @@
 	        let casted = this.props.item;
 	        console.log(this.props.item);
 	        return (React.createElement("div", null,
-	            React.createElement("p", null, "Printer Info was invoked!"),
+	            React.createElement("p", null,
+	                React.createElement("h3", null, "Printer Info : ")),
 	            Object.keys(this.props.item).map(m => React.createElement("p", null,
 	                React.createElement("h3", null, m.toString() + ' : ' + casted[m])))));
 	    }
@@ -215,7 +218,8 @@
 	class PrinterMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("p", null, "PrinterMenu was invoked!"),
+	            React.createElement("p", null,
+	                React.createElement("h2", null, "Printer Menu")),
 	            React.createElement("select", { onChange: e => store.dispatch({
 	                    type: PICK_MODEL,
 	                    submodel: PRINTER_SUBMODEL,

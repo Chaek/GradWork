@@ -217,7 +217,7 @@ class MainMenu extends React.Component<any, any> {
     public render() {
         return (
             <div>
-                <p>MainMenu was invoked!</p>
+                <p><h2>Main menu</h2></p>
                 <button onClick = {()=>
                     store.dispatch({type:SELECT_SUBMODEL, submodel:PRINTER_SUBMODEL})
                 }>
@@ -250,7 +250,7 @@ class ImageMenu extends React.Component<IImageProps, any> {
     public render() {
         return (
         <div>
-            <p>ImageMenu was invoked!</p>
+            <p><h2>Image Menu</h2></p>
             <button onClick = {()=>
                 ReactDOM.render(<MainMenu/>, 
                 document.getElementById("example"))}>
@@ -282,7 +282,7 @@ class PrinterInfo extends React.Component<IPrinterInfoProps, any> {
         console.log(this.props.item)
         return (
             <div>
-                <p>Printer Info was invoked!</p>
+                <p><h3>Printer Info : </h3></p>
                 {Object.keys(this.props.item).map(m=><p><h3>{m.toString() + ' : ' + casted[m]}</h3></p>)}
             </div>
         )
@@ -293,7 +293,7 @@ class PrinterMenu extends React.Component<IPrinterProps, any> {
     public render() {
         return (
         <div>
-        <p>PrinterMenu was invoked!</p>
+        <p><h2>Printer Menu</h2></p>
         
         <select onChange = {e=>store.dispatch({
             type:PICK_MODEL,
