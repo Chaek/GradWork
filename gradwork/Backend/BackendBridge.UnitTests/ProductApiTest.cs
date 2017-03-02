@@ -136,7 +136,7 @@ namespace BackendBridge.UnitTests
             };
 
             // Act
-            controller.Add(prod);
+            controller.Post(prod);
 
             // Assert
             mock.Verify(m => m.Add(prod));

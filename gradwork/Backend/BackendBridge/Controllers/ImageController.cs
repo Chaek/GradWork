@@ -26,7 +26,7 @@ namespace BackendBridge.Controllers
             ResponseModel<IEnumerable<Image> > res = new ResponseModel<IEnumerable<Image> >
             {
                 mes = "All images!",
-                type = DataType.PRODUCT,
+                type = ResponseModel<Image>.IMAGE_SUBMODEL,
                 data = repository.m_images,
             };
 

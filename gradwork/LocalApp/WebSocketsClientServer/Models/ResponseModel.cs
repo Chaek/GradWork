@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace BackendBridge.Models
+namespace WebSocketsClientServer.Models
 {
-    
-    public enum DataType { PRODUCT, IMAGE, ERROR };
+    public enum DataType { PRODUCT = 0, IMAGE, ERROR };
 
     //some constraints on T should be added
     public class ResponseModel<T>

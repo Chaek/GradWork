@@ -51,11 +51,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Behaviors\Chat.cs" />
-    <Compile Include="Behaviors\Echo.cs" />
-    <Compile Include="Behaviors\GiveMeJson.cs" />
+    <Compile Include="Behaviors\ImageUpdate.cs" />
+    <Compile Include="Behaviors\PrinterInfoUpdate.cs" />
+    <Compile Include="Helpers\ConvertHelper.cs" />
     <Compile Include="Laputa.cs" />
-    <Compile Include="Models\TextMessage.cs" />
+    <Compile Include="Models\Image.cs" />
+    <Compile Include="Models\ResponseModel.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

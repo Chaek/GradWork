@@ -27,7 +27,7 @@ namespace BackendBridge.Controllers
         {
             ResponseModel<IEnumerable<Product>> res = new ResponseModel<IEnumerable<Product>> {
                 mes = "All products!",
-                type = DataType.PRODUCT,
+                type = ResponseModel<Product>.PRODUCT_SUBMODEL,
                 data = repository.Products,
             };
 
@@ -48,7 +48,7 @@ namespace BackendBridge.Controllers
             ResponseModel<Product> res = new ResponseModel<Product>
             {
                 mes = "Concrete product",
-                type = DataType.PRODUCT,
+                type = ResponseModel<Product>.PRODUCT_SUBMODEL,
                 data = product,
             };
 
