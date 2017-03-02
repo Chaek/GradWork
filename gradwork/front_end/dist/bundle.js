@@ -59,6 +59,8 @@
 	const ADDED_MODEL = 'ADDED_MODEL';
 	const IMAGE_SUBMODEL = 'IMAGE';
 	const PRINTER_SUBMODEL = 'PRINTER';
+	const URL_IMAGE_REMOTE = 'ws://localhost:8000/ImageUpdate';
+	const URL_PRINTER_REMOTE = 'ws://localhost:8000/PrinterInfoUpdate';
 	const IMAGE = 1;
 	const PRINTER_INFO = 2;
 	const startModel = {
@@ -70,12 +72,26 @@
 	function models(state = startModel, action) {
 	    switch (action.type) {
 	        case RECEIVE_MODEL:
-	            return {
-	                isFetching: false,
-	                isActual: true,
-	                lastUpdated: Date.now(),
-	                items: action.model.data.map(m => m.Data)
-	            };
+	            switch (action.submodel) {
+	                case IMAGE_SUBMODEL:
+	                    let images = action.model.data;
+	                    return {
+	                        isFetching: false,
+	                        isActual: true,
+	                        lastUpdated: Date.now(),
+	                        items: images.map(m => m.Data)
+	                    };
+	                case PRINTER_SUBMODEL:
+	                    let printers = action.model.data;
+	                    return {
+	                        isFetching: false,
+	                        isActual: true,
+	                        lastUpdated: Date.now(),
+	                        items: printers.map(m => m.Name)
+	                    };
+	                default:
+	                    return state;
+	            }
 	        case REQUEST_MODEL:
 	            return Object.assign({}, state, { isFetching: true });
 	        default:
@@ -94,9 +110,7 @@
 	    switch (action.type) {
 	        case RECEIVE_MODEL:
 	        case REQUEST_MODEL:
-	            return Object.assign({}, state, {
-	                [action.submodel]: models(state[action.submodel], action)
-	            });
+	            return Object.assign({}, state, { [action.submodel]: models(state[action.submodel], action) });
 	        default:
 	            return state;
 	    }
@@ -111,9 +125,9 @@
 	        }
 	        return SingletonWS.instance;
 	    }
-	    connect() {
+	    connect(url) {
 	        return new Promise((resolve, reject) => {
-	            SingletonWS.ws = new WebSocket(SingletonWS.url);
+	            SingletonWS.ws = new WebSocket(url);
 	            SingletonWS.ws.onerror = (err) => {
 	                reject("Error : " + err.error);
 	                SingletonWS.ws.close();
@@ -144,20 +158,19 @@
 	                break;
 	        }
 	    }
-	    send(mes) {
+	    send(mes, url) {
 	        //ineffective but simple
-	        this.connect()
+	        this.connect(url)
 	            .then(() => SingletonWS.ws.send(mes))
 	            .catch(err => console.log(err));
 	    }
 	}
 	SingletonWS.ws = null;
-	SingletonWS.url = 'ws://localhost:8000/ImageUpdate';
 	//Thunk function
-	function getModelsWS(mes, submodel) {
+	function getModelsWS(mes, url) {
 	    return function (dispatch) {
 	        dispatch({ type: REQUEST_MODEL });
-	        return SingletonWS.getInstance().send(mes);
+	        return SingletonWS.getInstance().send(mes, url);
 	    };
 	}
 	function getModels(submodel) {
@@ -197,7 +210,7 @@
 	            React.createElement("br", null),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
 	            React.createElement("button", { onClick: () => store.dispatch(getModels(IMAGE_SUBMODEL)) }, "Update from remote app"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", IMAGE_SUBMODEL)) }, "Update from local app"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_IMAGE_REMOTE)) }, "Update from local app"),
 	            React.createElement("br", null),
 	            this.props.items.map(m => React.createElement("img", { src: m }))));
 	    }
@@ -208,7 +221,8 @@
 	            React.createElement("br", null),
 	            "PrinterMenu was invoked!",
 	            React.createElement("br", null),
-	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back")));
+	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_PRINTER_REMOTE)) }, "Update printers from local app")));
 	    }
 	}
 	//provider should be used instead

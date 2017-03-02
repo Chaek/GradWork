@@ -10,17 +10,21 @@ import { createStore, applyMiddleware } from 'redux';
 //export const rootReducer
 //export const runTests
 
-interface IData {
-    Data:string
-}
-
 interface IAction {
     type:string, 
 }
 
-interface Image extends IData {
+interface Image {
     ID:number,
-    Name:string
+    Name:string,
+    Data:string
+}
+
+interface Printer {
+    Name:string,
+    Status:string,
+    IsDefault:boolean,
+    IsNetworkPrinter:boolean
 }
 
 interface ResponseModel<T> {
@@ -40,6 +44,8 @@ const REQUEST_MODEL = 'REQUEST_MODEL'
 const ADDED_MODEL = 'ADDED_MODEL'
 const IMAGE_SUBMODEL = 'IMAGE'
 const PRINTER_SUBMODEL = 'PRINTER'
+const URL_IMAGE_REMOTE = 'ws://localhost:8000/ImageUpdate'
+const URL_PRINTER_REMOTE = 'ws://localhost:8000/PrinterInfoUpdate'
 
 const IMAGE:number = 1;
 const PRINTER_INFO:number = 2;
@@ -58,7 +64,8 @@ interface IModelS {
 }
 
 interface IModelA extends IAction {
-    model?:ResponseModel<IData>,
+    model?:ResponseModel<any>,
+    submodel:string
 }
 
 interface ISubmodelA extends IAction {
@@ -66,15 +73,30 @@ interface ISubmodelA extends IAction {
 }
 
 //Reducer
-function models<T>(state:IModelS = startModel, action:IModelA) {
+function models(state:IModelS = startModel, action:IModelA) {
     switch (action.type) {
         case RECEIVE_MODEL:
-            return { 
-                isFetching: false, 
-                isActual: true,
-                lastUpdated: Date.now(),
-                items: action.model.data.map(m => m.Data)
+            switch (action.submodel) {
+                case IMAGE_SUBMODEL:
+                    let images:Image[] = action.model.data as Image[]
+                    return { 
+                        isFetching: false, 
+                        isActual: true,
+                        lastUpdated: Date.now(),
+                        items: images.map(m => m.Data)
+                    }
+                case PRINTER_SUBMODEL:
+                    let printers:Printer[] = action.model.data as Printer[]
+                    return {
+                        isFetching: false, 
+                        isActual: true,
+                        lastUpdated: Date.now(),
+                        items: printers.map(m => m.Name)
+                    }
+                default:
+                    return state
             }
+            
         case REQUEST_MODEL:
             return Object.assign({}, state, { isFetching: true })
         default: 
@@ -96,9 +118,7 @@ function modelsBySubmodel(state:any = {}, action:ISubmodelA) {
         case RECEIVE_MODEL:
         case REQUEST_MODEL:
             return Object.assign({}, state, 
-            { 
-                [action.submodel]: models(state[action.submodel], action) 
-            })
+                { [action.submodel]: models(state[action.submodel], action) })
         default: 
             return state
     }
@@ -109,7 +129,6 @@ function modelsBySubmodel(state:any = {}, action:ISubmodelA) {
 class SingletonWS {
     private static instance:SingletonWS
     private static ws:WebSocket = null
-    private static url:string = 'ws://localhost:8000/ImageUpdate'
 
     private constuctor() {}
 
@@ -120,9 +139,9 @@ class SingletonWS {
         return SingletonWS.instance;
     }
 
-    private connect() {
+    private connect(url:string) {
         return new Promise((resolve, reject) => {
-            SingletonWS.ws = new WebSocket(SingletonWS.url)
+            SingletonWS.ws = new WebSocket(url)
             
             SingletonWS.ws.onerror = (err:ErrorEvent) => {
                 reject("Error : " + err.error)
@@ -159,19 +178,19 @@ class SingletonWS {
         }
     }
 
-    public send(mes:string) {
+    public send(mes:string, url:string) {
         //ineffective but simple
-        this.connect()
+        this.connect(url)
         .then(()=>SingletonWS.ws.send(mes))
         .catch(err=>console.log(err))
     }
 }
 
 //Thunk function
-function getModelsWS(mes:string, submodel:string) {
+function getModelsWS(mes:string, url:string) {
     return function(dispatch:any) {
         dispatch({ type: REQUEST_MODEL })
-        return SingletonWS.getInstance().send(mes)
+        return SingletonWS.getInstance().send(mes, url)
     }
 }
 
@@ -247,7 +266,7 @@ class ImageMenu extends React.Component<IImageProps, any> {
             </button>
             
             <button onClick = {()=>
-                store.dispatch(getModelsWS("Give me it", IMAGE_SUBMODEL))
+                store.dispatch(getModelsWS("Give me it", URL_IMAGE_REMOTE))
             }>
             Update from local app
             </button>
@@ -269,7 +288,15 @@ class PrinterMenu extends React.Component<IPrinterProps, any> {
         <button onClick = {()=>
             ReactDOM.render(<MainMenu/>, 
             document.getElementById("example"))}>
-        Back</button>
+        Back
+        </button>
+
+        <button onClick = {()=>
+            store.dispatch(getModelsWS("Give me it", URL_PRINTER_REMOTE)) 
+        }>
+        Update printers from local app
+        </button>
+
         </div>
         );
     }
