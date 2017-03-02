@@ -53,6 +53,7 @@
 	const createLogger = __webpack_require__(28);
 	const redux_2 = __webpack_require__(5);
 	//ACTIONS
+	const PICK_MODEL = 'PICK_MODEL';
 	const RECEIVE_MODEL = 'RECEIVE_MODEL';
 	const SELECT_SUBMODEL = 'SELECT_SUBMODEL';
 	const REQUEST_MODEL = 'REQUEST_MODEL';
@@ -71,27 +72,16 @@
 	//Reducer
 	function models(state = startModel, action) {
 	    switch (action.type) {
+	        case PICK_MODEL:
+	            return Object.assign({}, state, { picked: action.picked });
 	        case RECEIVE_MODEL:
-	            switch (action.submodel) {
-	                case IMAGE_SUBMODEL:
-	                    let images = action.model.data;
-	                    return {
-	                        isFetching: false,
-	                        isActual: true,
-	                        lastUpdated: Date.now(),
-	                        items: images.map(m => m.Data)
-	                    };
-	                case PRINTER_SUBMODEL:
-	                    let printers = action.model.data;
-	                    return {
-	                        isFetching: false,
-	                        isActual: true,
-	                        lastUpdated: Date.now(),
-	                        items: printers.map(m => m.Name)
-	                    };
-	                default:
-	                    return state;
-	            }
+	            return {
+	                picked: 0,
+	                isFetching: false,
+	                isActual: true,
+	                lastUpdated: Date.now(),
+	                items: action.model.data.map(m => m)
+	            };
 	        case REQUEST_MODEL:
 	            return Object.assign({}, state, { isFetching: true });
 	        default:
@@ -108,6 +98,7 @@
 	}
 	function modelsBySubmodel(state = {}, action) {
 	    switch (action.type) {
+	        case PICK_MODEL:
 	        case RECEIVE_MODEL:
 	        case REQUEST_MODEL:
 	            return Object.assign({}, state, { [action.submodel]: models(state[action.submodel], action) });
@@ -194,46 +185,71 @@
 	class MainMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("button", { onClick: () => {
-	                    store.dispatch({ type: SELECT_SUBMODEL, submodel: PRINTER_SUBMODEL });
-	                } }, "Printer menu"),
-	            React.createElement("button", { onClick: () => {
-	                    store.dispatch({ type: SELECT_SUBMODEL, submodel: IMAGE_SUBMODEL });
-	                } }, "Image menu")));
+	            React.createElement("p", null, "MainMenu was invoked!"),
+	            React.createElement("button", { onClick: () => store.dispatch({ type: SELECT_SUBMODEL, submodel: PRINTER_SUBMODEL }) }, "Printer menu"),
+	            React.createElement("button", { onClick: () => store.dispatch({ type: SELECT_SUBMODEL, submodel: IMAGE_SUBMODEL }) }, "Image menu")));
 	    }
 	}
 	class ImageMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("br", null),
-	            "ImageMenu was invoked!",
-	            React.createElement("br", null),
+	            React.createElement("p", null, "ImageMenu was invoked!"),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
 	            React.createElement("button", { onClick: () => store.dispatch(getModels(IMAGE_SUBMODEL)) }, "Update from remote app"),
 	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_IMAGE_REMOTE)) }, "Update from local app"),
 	            React.createElement("br", null),
-	            this.props.items.map(m => React.createElement("img", { src: m }))));
+	            this.props.items.map(m => React.createElement("img", { src: m.Data }))));
+	    }
+	}
+	class PrinterInfo extends React.Component {
+	    render() {
+	        //should be rewritten
+	        let casted = this.props.item;
+	        console.log(this.props.item);
+	        return (React.createElement("div", null,
+	            React.createElement("p", null, "Printer Info was invoked!"),
+	            Object.keys(this.props.item).map(m => React.createElement("p", null,
+	                React.createElement("h3", null, m.toString() + ' : ' + casted[m])))));
 	    }
 	}
 	class PrinterMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("br", null),
-	            "PrinterMenu was invoked!",
+	            React.createElement("p", null, "PrinterMenu was invoked!"),
+	            React.createElement("select", { onChange: e => store.dispatch({
+	                    type: PICK_MODEL,
+	                    submodel: PRINTER_SUBMODEL,
+	                    picked: e.target.selectedIndex
+	                }) }, this.props.items.map(m => React.createElement("option", null, m.Name))),
 	            React.createElement("br", null),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_PRINTER_REMOTE)) }, "Update printers from local app")));
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_PRINTER_REMOTE)) }, "Update printers from local app"),
+	            React.createElement("br", null)));
 	    }
 	}
+	const DEF_PRINTER_INFO = {
+	    Name: "Unknown",
+	    Status: "Unknown",
+	    IsDefault: false,
+	    IsNetworkPrinter: false
+	};
 	//provider should be used instead
 	function renderManager() {
+	    //should be rewritten
 	    let state = store.getState();
 	    let submodel = state.selectedSubmodel;
-	    let items = (submodel in state.modelsBySubmodel) ?
-	        state.modelsBySubmodel[submodel].items : [];
+	    let items = [];
+	    let i = undefined;
+	    if (submodel in state.modelsBySubmodel) {
+	        items = state.modelsBySubmodel[submodel].items;
+	        i = state.modelsBySubmodel[submodel].picked;
+	    }
 	    switch (submodel) {
 	        case PRINTER_SUBMODEL:
-	            ReactDOM.render(React.createElement(PrinterMenu, { items: items }), document.getElementById("example"));
+	            let item = (i === undefined) ? DEF_PRINTER_INFO : items[i];
+	            ReactDOM.render(React.createElement("div", null,
+	                React.createElement(PrinterMenu, { items: items }),
+	                React.createElement(PrinterInfo, { item: item })), document.getElementById("example"));
 	            break;
 	        case IMAGE_SUBMODEL:
 	            ReactDOM.render(React.createElement(ImageMenu, { items: items }), document.getElementById("example"));

@@ -38,6 +38,7 @@ interface IAppProps {
 }
 
 //ACTIONS
+const PICK_MODEL = 'PICK_MODEL'
 const RECEIVE_MODEL = 'RECEIVE_MODEL'
 const SELECT_SUBMODEL = 'SELECT_SUBMODEL'
 const REQUEST_MODEL = 'REQUEST_MODEL'
@@ -57,6 +58,7 @@ const startModel:IModelS = {
 }
 
 interface IModelS {
+    picked?:number,
     isFetching: boolean,
     isActual: boolean,
     items: string[]
@@ -65,7 +67,8 @@ interface IModelS {
 
 interface IModelA extends IAction {
     model?:ResponseModel<any>,
-    submodel:string
+    picked?:number
+    //submodel:string
 }
 
 interface ISubmodelA extends IAction {
@@ -75,28 +78,16 @@ interface ISubmodelA extends IAction {
 //Reducer
 function models(state:IModelS = startModel, action:IModelA) {
     switch (action.type) {
+        case PICK_MODEL:
+            return Object.assign({}, state, { picked: action.picked })
         case RECEIVE_MODEL:
-            switch (action.submodel) {
-                case IMAGE_SUBMODEL:
-                    let images:Image[] = action.model.data as Image[]
-                    return { 
-                        isFetching: false, 
-                        isActual: true,
-                        lastUpdated: Date.now(),
-                        items: images.map(m => m.Data)
-                    }
-                case PRINTER_SUBMODEL:
-                    let printers:Printer[] = action.model.data as Printer[]
-                    return {
-                        isFetching: false, 
-                        isActual: true,
-                        lastUpdated: Date.now(),
-                        items: printers.map(m => m.Name)
-                    }
-                default:
-                    return state
+            return { 
+                picked: 0,
+                isFetching: false, 
+                isActual: true,
+                lastUpdated: Date.now(),
+                items: action.model.data.map(m => m)
             }
-            
         case REQUEST_MODEL:
             return Object.assign({}, state, { isFetching: true })
         default: 
@@ -115,6 +106,7 @@ function selectedSubmodel(state:string = IMAGE_SUBMODEL, action:ISubmodelA) {
 
 function modelsBySubmodel(state:any = {}, action:ISubmodelA) {
     switch (action.type) {
+        case PICK_MODEL:
         case RECEIVE_MODEL:
         case REQUEST_MODEL:
             return Object.assign({}, state, 
@@ -225,15 +217,16 @@ class MainMenu extends React.Component<any, any> {
     public render() {
         return (
             <div>
-                <button onClick = {()=>{
-                    store.dispatch({type:SELECT_SUBMODEL, submodel:PRINTER_SUBMODEL});
-                }}>
+                <p>MainMenu was invoked!</p>
+                <button onClick = {()=>
+                    store.dispatch({type:SELECT_SUBMODEL, submodel:PRINTER_SUBMODEL})
+                }>
                     Printer menu
                 </button>
                 
-                <button onClick = {()=>{
+                <button onClick = {()=>
                     store.dispatch({type:SELECT_SUBMODEL, submodel:IMAGE_SUBMODEL})
-                }}>
+                }>
                     Image menu
                 </button>
             </div>
@@ -242,18 +235,22 @@ class MainMenu extends React.Component<any, any> {
 }
 
 interface IImageProps {
-    items:string[]
+    items:Image[]
 }
 
 interface IPrinterProps {
-    items:string[]
+    items:Printer[]
+}
+
+interface IPrinterInfoProps {
+    item: Printer
 }
 
 class ImageMenu extends React.Component<IImageProps, any> {
     public render() {
         return (
         <div>
-            <br/>ImageMenu was invoked!<br/>
+            <p>ImageMenu was invoked!</p>
             <button onClick = {()=>
                 ReactDOM.render(<MainMenu/>, 
                 document.getElementById("example"))}>
@@ -272,9 +269,23 @@ class ImageMenu extends React.Component<IImageProps, any> {
             </button>
 
             <br/>
-            {this.props.items.map(m =><img src = {m}/>)}
+            {this.props.items.map(m=><img src = {m.Data}/>)}
         </div>
         );
+    }
+}
+
+class PrinterInfo extends React.Component<IPrinterInfoProps, any> {
+    public render() {
+        //should be rewritten
+        let casted:any = this.props.item as any
+        console.log(this.props.item)
+        return (
+            <div>
+                <p>Printer Info was invoked!</p>
+                {Object.keys(this.props.item).map(m=><p><h3>{m.toString() + ' : ' + casted[m]}</h3></p>)}
+            </div>
+        )
     }
 }
 
@@ -282,8 +293,16 @@ class PrinterMenu extends React.Component<IPrinterProps, any> {
     public render() {
         return (
         <div>
-        <br/>
-            PrinterMenu was invoked! 
+        <p>PrinterMenu was invoked!</p>
+        
+        <select onChange = {e=>store.dispatch({
+            type:PICK_MODEL,
+            submodel:PRINTER_SUBMODEL,
+            picked:e.target.selectedIndex
+        })}>
+            {this.props.items.map(m=><option>{m.Name}</option>)}
+        </select>
+
         <br/>
         <button onClick = {()=>
             ReactDOM.render(<MainMenu/>, 
@@ -297,21 +316,39 @@ class PrinterMenu extends React.Component<IPrinterProps, any> {
         Update printers from local app
         </button>
 
+        <br/>
+
         </div>
         );
     }
 }
 
+const DEF_PRINTER_INFO:Printer = {
+    Name: "Unknown",
+    Status: "Unknown",
+    IsDefault: false,
+    IsNetworkPrinter: false
+}
 //provider should be used instead
 function renderManager() {
+    //should be rewritten
     let state:any = store.getState();
-    let submodel:string = state.selectedSubmodel; 
-    let items:string[] = (submodel in state.modelsBySubmodel)? 
-        state.modelsBySubmodel[submodel].items : [];
-
+    let submodel:string = state.selectedSubmodel;
+    let items:any[] = []
+    let i = undefined 
+    if (submodel in state.modelsBySubmodel) {
+        items = state.modelsBySubmodel[submodel].items
+        i = state.modelsBySubmodel[submodel].picked
+    }
     switch (submodel) {
         case PRINTER_SUBMODEL:
-            ReactDOM.render(<PrinterMenu items = {items}/>, 
+            let item = (i === undefined)? DEF_PRINTER_INFO : items[i]
+
+            ReactDOM.render(
+            <div>
+                <PrinterMenu items = {items}/>
+                <PrinterInfo item = {item}/>
+            </div>, 
             document.getElementById("example"));
             break;
         case IMAGE_SUBMODEL:
