@@ -52,29 +52,13 @@
 	const redux_thunk_1 = __webpack_require__(27);
 	const createLogger = __webpack_require__(28);
 	const redux_2 = __webpack_require__(5);
-	//ACTIONS
-	const PICK_MODEL = 'PICK_MODEL';
-	const RECEIVE_MODEL = 'RECEIVE_MODEL';
-	const SELECT_SUBMODEL = 'SELECT_SUBMODEL';
-	const REQUEST_MODEL = 'REQUEST_MODEL';
-	const ADDED_MODEL = 'ADDED_MODEL';
-	const IMAGE_SUBMODEL = 'IMAGE';
-	const PRINTER_SUBMODEL = 'PRINTER';
-	const URL_IMAGE_REMOTE = 'ws://localhost:8000/ImageUpdate';
-	const URL_PRINTER_REMOTE = 'ws://localhost:8000/PrinterInfoUpdate';
-	const IMAGE = 1;
-	const PRINTER_INFO = 2;
-	const startModel = {
-	    isFetching: false,
-	    isActual: true,
-	    items: []
-	};
+	const K = __webpack_require__(34);
 	//Reducer
-	function models(state = startModel, action) {
+	function models(state = K.START_MODEL, action) {
 	    switch (action.type) {
-	        case PICK_MODEL:
+	        case K.PICK_MODEL:
 	            return Object.assign({}, state, { picked: action.picked });
-	        case RECEIVE_MODEL:
+	        case K.RECEIVE_MODEL:
 	            return {
 	                picked: 0,
 	                isFetching: false,
@@ -82,15 +66,15 @@
 	                lastUpdated: Date.now(),
 	                items: action.model.data.map(m => m)
 	            };
-	        case REQUEST_MODEL:
+	        case K.REQUEST_MODEL:
 	            return Object.assign({}, state, { isFetching: true });
 	        default:
 	            return state;
 	    }
 	}
-	function selectedSubmodel(state = IMAGE_SUBMODEL, action) {
+	function selectedSubmodel(state = K.IMAGE_SUBMODEL, action) {
 	    switch (action.type) {
-	        case (SELECT_SUBMODEL):
+	        case (K.SELECT_SUBMODEL):
 	            return action.submodel;
 	        default:
 	            return state;
@@ -98,9 +82,9 @@
 	}
 	function modelsBySubmodel(state = {}, action) {
 	    switch (action.type) {
-	        case PICK_MODEL:
-	        case RECEIVE_MODEL:
-	        case REQUEST_MODEL:
+	        case K.PICK_MODEL:
+	        case K.RECEIVE_MODEL:
+	        case K.REQUEST_MODEL:
 	            return Object.assign({}, state, { [action.submodel]: models(state[action.submodel], action) });
 	        default:
 	            return state;
@@ -140,10 +124,10 @@
 	        let data = JSON.parse(msg.data);
 	        let submodel = "";
 	        switch (data.type) {
-	            case PRINTER_SUBMODEL:
-	            case IMAGE_SUBMODEL:
+	            case K.PRINTER_SUBMODEL:
+	            case K.IMAGE_SUBMODEL:
 	                console.log(data);
-	                store.dispatch({ submodel: data.type, type: RECEIVE_MODEL, model: data });
+	                store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL, model: data });
 	                break;
 	            default:
 	                break;
@@ -160,35 +144,26 @@
 	//Thunk function
 	function getModelsWS(mes, url) {
 	    return function (dispatch) {
-	        dispatch({ type: REQUEST_MODEL });
+	        dispatch({ type: K.REQUEST_MODEL });
 	        return SingletonWS.getInstance().send(mes, url);
 	    };
 	}
 	function getModels(submodel) {
 	    return function (dispatch) {
-	        dispatch({ type: REQUEST_MODEL });
+	        dispatch({ type: K.REQUEST_MODEL });
 	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
 	            .then(response => response.json())
-	            .then(json => dispatch({ submodel, type: RECEIVE_MODEL, model: json }))
+	            .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL, model: json }))
 	            .catch(() => { });
 	    };
 	}
-	//main
-	const loggerMiddleware = createLogger();
-	const reducer = redux_1.combineReducers({
-	    selectedSubmodel,
-	    modelsBySubmodel
-	});
-	const store = redux_2.createStore(reducer, redux_2.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
-	loggerMiddleware // neat middleware that logs actions
-	));
 	class MainMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
 	            React.createElement("p", null,
 	                React.createElement("h2", null, "Main menu")),
-	            React.createElement("button", { onClick: () => store.dispatch({ type: SELECT_SUBMODEL, submodel: PRINTER_SUBMODEL }) }, "Printer menu"),
-	            React.createElement("button", { onClick: () => store.dispatch({ type: SELECT_SUBMODEL, submodel: IMAGE_SUBMODEL }) }, "Image menu")));
+	            React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_SUBMODEL, submodel: K.PRINTER_SUBMODEL }) }, "Printer menu"),
+	            React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_SUBMODEL, submodel: K.IMAGE_SUBMODEL }) }, "Image menu")));
 	    }
 	}
 	class ImageMenu extends React.Component {
@@ -197,8 +172,8 @@
 	            React.createElement("p", null,
 	                React.createElement("h2", null, "Image Menu")),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModels(IMAGE_SUBMODEL)) }, "Update from remote app"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_IMAGE_REMOTE)) }, "Update from local app"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModels(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_REMOTE)) }, "Update from local app"),
 	            React.createElement("br", null),
 	            this.props.items.map(m => React.createElement("img", { src: m.Data }))));
 	    }
@@ -221,22 +196,16 @@
 	            React.createElement("p", null,
 	                React.createElement("h2", null, "Printer Menu")),
 	            React.createElement("select", { onChange: e => store.dispatch({
-	                    type: PICK_MODEL,
-	                    submodel: PRINTER_SUBMODEL,
+	                    type: K.PICK_MODEL,
+	                    submodel: K.PRINTER_SUBMODEL,
 	                    picked: e.target.selectedIndex
 	                }) }, this.props.items.map(m => React.createElement("option", null, m.Name))),
 	            React.createElement("br", null),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", URL_PRINTER_REMOTE)) }, "Update printers from local app"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_PRINTER_REMOTE)) }, "Update printers from local app"),
 	            React.createElement("br", null)));
 	    }
 	}
-	const DEF_PRINTER_INFO = {
-	    Name: "Unknown",
-	    Status: "Unknown",
-	    IsDefault: false,
-	    IsNetworkPrinter: false
-	};
 	//provider should be used instead
 	function renderManager() {
 	    //should be rewritten
@@ -249,116 +218,30 @@
 	        i = state.modelsBySubmodel[submodel].picked;
 	    }
 	    switch (submodel) {
-	        case PRINTER_SUBMODEL:
-	            let item = (i === undefined) ? DEF_PRINTER_INFO : items[i];
+	        case K.PRINTER_SUBMODEL:
+	            let item = (i === undefined) ? K.DEF_PRINTER_INFO : items[i];
 	            ReactDOM.render(React.createElement("div", null,
 	                React.createElement(PrinterMenu, { items: items }),
 	                React.createElement(PrinterInfo, { item: item })), document.getElementById("example"));
 	            break;
-	        case IMAGE_SUBMODEL:
+	        case K.IMAGE_SUBMODEL:
 	            ReactDOM.render(React.createElement(ImageMenu, { items: items }), document.getElementById("example"));
 	            break;
 	        default:
 	            ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example"));
 	    }
 	}
+	//main
+	const loggerMiddleware = createLogger();
+	const reducer = redux_1.combineReducers({
+	    selectedSubmodel,
+	    modelsBySubmodel
+	});
+	const store = redux_2.createStore(reducer, redux_2.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
+	loggerMiddleware // neat middleware that logs actions
+	));
 	store.subscribe(renderManager);
 	ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example"));
-	//TESTS
-	/*
-	const test_modelTypeSelected = () => {
-	    let stateBefore = "text";
-	    let stateAfter = "text";
-	    let action = selectedModelType("text")
-	
-	    deepFreeze(stateBefore);
-	    expect(modelTypeSelected(stateBefore, action)).toEqual(stateAfter);
-	}
-	
-	const test_items = () => {
-	    //initialization
-	    let stateBefore:any = {
-	        isFetching: false,
-	        items: []
-	    }
-	
-	    deepFreeze(stateBefore);
-	
-	    //REQUEST_MODEL
-	    let stateAfter:any = {
-	        isFetching: true,
-	        items: []
-	    }
-	
-	    let action = requestPosts("text");
-	    expect(items(stateBefore, action)).toEqual(stateAfter);
-	
-	    //RECEIVE_MODEL
-	    const json:string = '{"mes": "Hello", "data" : [{"a":1}, {"b":"hello"}]}';
-	    const inModel:IResponseModel = JSON.parse(json);
-	
-	    stateAfter = {
-	        isFetching: false,
-	        items: [{a:1}, {b:"hello"}]
-	    }
-	
-	    action = receivePosts("text", inModel);
-	    expect(items(stateBefore, action)).toEqual(stateAfter);
-	}
-	
-	const test_itemsByModel = () => {
-	    //initialization
-	    let stateBefore:any = {
-	        images: {
-	            isFetching:true,
-	            items: []
-	        },
-	
-	        emails: {
-	            isFetching:false,
-	            items: [1, 2, 3, 4]
-	        },
-	
-	        text: {
-	            isFetching: false,
-	            items: ["hello", "Bye", "How are you?"]
-	        }
-	    }
-	
-	    deepFreeze(stateBefore);
-	
-	    //REQUEST_MODEL
-	    let stateAfter:any = {
-	        images: {
-	            isFetching:true,
-	            items: []
-	        },
-	
-	        emails: {
-	            isFetching:false,
-	            items: [1, 2, 3, 4]
-	        },
-	
-	        text: {
-	            isFetching: true,
-	            items: ["hello", "Bye", "How are you?"]
-	        }
-	    }
-	
-	    let action = requestPosts("text");
-	    expect(itemsByModel(stateBefore, action)).toEqual(stateAfter);
-	
-	    //RECEIVE_MODEL
-	}
-	
-	const runTests = () => {
-	    test_modelTypeSelected();
-	    test_items();
-	    test_itemsByModel();
-	    console.log("All tests have been passed");
-	}
-	
-	*/ 
 
 
 /***/ },
@@ -2953,6 +2836,35 @@
 	  transformer: undefined
 	};
 	module.exports = exports['default'];
+
+/***/ },
+/* 34 */
+/***/ function(module, exports) {
+
+	"use strict";
+	exports.PICK_MODEL = 'PICK_MODEL';
+	exports.RECEIVE_MODEL = 'RECEIVE_MODEL';
+	exports.SELECT_SUBMODEL = 'SELECT_SUBMODEL';
+	exports.REQUEST_MODEL = 'REQUEST_MODEL';
+	exports.ADDED_MODEL = 'ADDED_MODEL';
+	exports.IMAGE_SUBMODEL = 'IMAGE';
+	exports.PRINTER_SUBMODEL = 'PRINTER';
+	exports.URL_IMAGE_REMOTE = 'ws://localhost:8000/ImageUpdate';
+	exports.URL_PRINTER_REMOTE = 'ws://localhost:8000/PrinterInfoUpdate';
+	exports.IMAGE = 1;
+	exports.PRINTER_INFO = 2;
+	exports.START_MODEL = {
+	    isFetching: false,
+	    isActual: true,
+	    items: []
+	};
+	exports.DEF_PRINTER_INFO = {
+	    Name: "Unknown",
+	    Status: "Unknown",
+	    IsDefault: false,
+	    IsNetworkPrinter: false
+	};
+
 
 /***/ }
 /******/ ]);
