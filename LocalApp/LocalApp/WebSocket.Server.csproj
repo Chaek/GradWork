@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="Behaviors\ImageUpdate.cs" />
     <Compile Include="Behaviors\PrinterInfoUpdate.cs" />
+    <Compile Include="Behaviors\PrinterScan.cs" />
     <Compile Include="Helpers\ConvertHelper.cs" />
     <Compile Include="Models\Image.cs" />
     <Compile Include="Models\Printer.cs" />

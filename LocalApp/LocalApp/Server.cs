@@ -11,8 +11,9 @@ namespace WebSocketsClientServer
         static void Main(string[] args)
         {
             var wssv = new WebSocketServer("ws://localhost:8000");
-            wssv.AddWebSocketService<PrinterInfoUpdate>("/PrinterInfoUpdate");
-            wssv.AddWebSocketService<ImageUpdate>("/ImageUpdate");
+            wssv.AddWebSocketService<PrinterInfoUpdate>("/Printer/Info");
+            wssv.AddWebSocketService<ImageUpdate>("/Image/Update");
+            wssv.AddWebSocketService<PrinterScan>("/Printer/Scan");
 
             wssv.Start();
 

@@ -136,7 +136,7 @@ class MainMenu extends React.Component<any, any> {
     public render() {
         return (
             <div>
-                <p><h2>Main menu</h2></p>
+                <h2><p>Main menu</p></h2>
                 <button onClick = {()=>
                     store.dispatch({type:K.SELECT_SUBMODEL, submodel:K.PRINTER_SUBMODEL})
                 }>
@@ -157,7 +157,7 @@ class ImageMenu extends React.Component<I.ImageProps, any> {
     public render() {
         return (
         <div>
-            <p><h2>Image Menu</h2></p>
+            <h2><p>Image Menu</p></h2>
             <button onClick = {()=>
                 ReactDOM.render(<MainMenu/>, 
                 document.getElementById("example"))}>
@@ -170,7 +170,7 @@ class ImageMenu extends React.Component<I.ImageProps, any> {
             </button>
             
             <button onClick = {()=>
-                store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_REMOTE))
+                store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE))
             }>
             Update from local app
             </button>
@@ -189,8 +189,11 @@ class PrinterInfo extends React.Component<I.PrinterInfoProps, any> {
         console.log(this.props.item)
         return (
             <div>
-                <p><h3>Printer Info : </h3></p>
-                {Object.keys(this.props.item).map(m=><p><h3>{m.toString() + ' : ' + casted[m]}</h3></p>)}
+                <h3><p>Printer Info : </p></h3>
+                {Object.keys(this.props.item).map(m=><h3><p>{m.toString() + ' : ' + casted[m]}</p></h3>)}
+            <button onClick = {() => {store.dispatch(getModelsWS("Give me it", K.URL_PRINTER_SCAN))}}>
+                Scanning
+            </button>
             </div>
         )
     }
@@ -200,7 +203,7 @@ class PrinterMenu extends React.Component<I.PrinterProps, any> {
     public render() {
         return (
         <div>
-        <p><h2>Printer Menu</h2></p>
+        <h2><p>Printer Menu</p></h2>
         
         <select onChange = {e=>store.dispatch({
             type:K.PICK_MODEL,
@@ -218,13 +221,13 @@ class PrinterMenu extends React.Component<I.PrinterProps, any> {
         </button>
 
         <button onClick = {()=>
-            store.dispatch(getModelsWS("Give me it", K.URL_PRINTER_REMOTE)) 
+            store.dispatch(getModelsWS("Is printer there", K.URL_PRINTER_INFO)) 
         }>
         Update printers from local app
         </button>
 
         <br/>
-
+        
         </div>
         );
     }

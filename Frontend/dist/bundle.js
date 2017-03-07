@@ -160,8 +160,8 @@
 	class MainMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("p", null,
-	                React.createElement("h2", null, "Main menu")),
+	            React.createElement("h2", null,
+	                React.createElement("p", null, "Main menu")),
 	            React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_SUBMODEL, submodel: K.PRINTER_SUBMODEL }) }, "Printer menu"),
 	            React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_SUBMODEL, submodel: K.IMAGE_SUBMODEL }) }, "Image menu")));
 	    }
@@ -169,11 +169,11 @@
 	class ImageMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("p", null,
-	                React.createElement("h2", null, "Image Menu")),
+	            React.createElement("h2", null,
+	                React.createElement("p", null, "Image Menu")),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
 	            React.createElement("button", { onClick: () => store.dispatch(getModels(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_REMOTE)) }, "Update from local app"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE)) }, "Update from local app"),
 	            React.createElement("br", null),
 	            this.props.items.map(m => React.createElement("img", { src: m.Data }))));
 	    }
@@ -184,17 +184,18 @@
 	        let casted = this.props.item;
 	        console.log(this.props.item);
 	        return (React.createElement("div", null,
-	            React.createElement("p", null,
-	                React.createElement("h3", null, "Printer Info : ")),
-	            Object.keys(this.props.item).map(m => React.createElement("p", null,
-	                React.createElement("h3", null, m.toString() + ' : ' + casted[m])))));
+	            React.createElement("h3", null,
+	                React.createElement("p", null, "Printer Info : ")),
+	            Object.keys(this.props.item).map(m => React.createElement("h3", null,
+	                React.createElement("p", null, m.toString() + ' : ' + casted[m]))),
+	            React.createElement("button", { onClick: () => { store.dispatch(getModelsWS("Give me it", K.URL_PRINTER_SCAN)); } }, "Scanning")));
 	    }
 	}
 	class PrinterMenu extends React.Component {
 	    render() {
 	        return (React.createElement("div", null,
-	            React.createElement("p", null,
-	                React.createElement("h2", null, "Printer Menu")),
+	            React.createElement("h2", null,
+	                React.createElement("p", null, "Printer Menu")),
 	            React.createElement("select", { onChange: e => store.dispatch({
 	                    type: K.PICK_MODEL,
 	                    submodel: K.PRINTER_SUBMODEL,
@@ -202,7 +203,7 @@
 	                }) }, this.props.items.map(m => React.createElement("option", null, m.Name))),
 	            React.createElement("br", null),
 	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_PRINTER_REMOTE)) }, "Update printers from local app"),
+	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Is printer there", K.URL_PRINTER_INFO)) }, "Update printers from local app"),
 	            React.createElement("br", null)));
 	    }
 	}
@@ -2846,13 +2847,12 @@
 	exports.RECEIVE_MODEL = 'RECEIVE_MODEL';
 	exports.SELECT_SUBMODEL = 'SELECT_SUBMODEL';
 	exports.REQUEST_MODEL = 'REQUEST_MODEL';
-	exports.ADDED_MODEL = 'ADDED_MODEL';
 	exports.IMAGE_SUBMODEL = 'IMAGE';
 	exports.PRINTER_SUBMODEL = 'PRINTER';
-	exports.URL_IMAGE_REMOTE = 'ws://localhost:8000/ImageUpdate';
-	exports.URL_PRINTER_REMOTE = 'ws://localhost:8000/PrinterInfoUpdate';
-	exports.IMAGE = 1;
-	exports.PRINTER_INFO = 2;
+	exports.COMMAND_TO_SCAN = 'COMMAND_TO_SCAN';
+	exports.URL_IMAGE_UPDATE = 'ws://localhost:8000/Image/Update';
+	exports.URL_PRINTER_INFO = 'ws://localhost:8000/Printer/Info';
+	exports.URL_PRINTER_SCAN = 'ws://localhost:8000/Printer/Scan';
 	exports.START_MODEL = {
 	    isFetching: false,
 	    isActual: true,
