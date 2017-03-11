@@ -15,6 +15,8 @@ function models(state:I.ModelS = K.START_MODEL, action:I.ModelA) {
     switch (action.type) {
         case K.PICK_MODEL:
             return Object.assign({}, state, { picked: action.picked })
+        case K.CHANGE_ACTUALITY:
+            return Object.assign({}, state, { isActual: action.actuality })
         case K.RECEIVE_MODEL:
             return { 
                 picked: 0,
@@ -86,6 +88,7 @@ function modelsBySubmodel(state:any =
         case K.PICK_MODEL:
         case K.RECEIVE_MODEL:
         case K.REQUEST_MODEL:
+        case K.CHANGE_ACTUALITY:
             return Object.assign({}, state, 
                 { [action.submodel]: models(state[action.submodel], action) })
         default: 
@@ -140,6 +143,7 @@ class SingletonWS {
             case K.PRINTER_SUBMODEL:
             case K.IMAGE_SUBMODEL:
                 store.dispatch({submodel:data.type, type: K.RECEIVE_MODEL, model: data })
+                store.dispatch({submodel:data.type, type: K.CHANGE_ACTUALITY, actuality:false})
                 break;
             default:
                 break;
@@ -181,10 +185,42 @@ function getModels(submodel:string) {
     }
 }
 
+
+function postModels(models:string, submodel:string) {
+    return function(dispatch:any) { 
+        dispatch({ type: K.REQUEST_MODEL })
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/postcollection`,
+            {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                },
+                body:models
+            })
+            //why can't assign to ResponseModel<Image>?
+            .then(res => {
+                if (res.ok) dispatch({ submodel, type: K.CHANGE_ACTUALITY, actuality: true })
+                else console.log("error")
+            })
+    }
+}
+
 const ToMainMenuButton = () =>
     <button onClick = {()=>store.dispatch({type:K.SELECT_MENU, menu:K.MAIN_MENU})}>
     Back
     </button>
+
+const ACTUAL = 'ACTUAL'
+const NOT_ACTUAL = 'NOT ACTUAL'
+
+const UpdateModelPanel = (items:any[], status:string) =>
+    <div>
+        <button onClick={()=>{
+            store.dispatch(postModels(JSON.stringify(items), K.IMAGE_SUBMODEL))}}>Update
+        </button>
+        Status : {status}
+    </div>
 
 const MainMenu = () =>
     <div>
@@ -285,6 +321,7 @@ class Main extends React.Component<any, any> {
         let items:any = []
         let item = undefined
         let i = undefined
+        let status:string = ''
 
         switch (menu) {    
             case K.PRINTER_MENU:
@@ -298,7 +335,12 @@ class Main extends React.Component<any, any> {
                     </div>)
             case K.IMAGE_MENU:
                 items = state.modelsBySubmodel[K.IMAGE_SUBMODEL].items
-                return (<div>{ImageMenu(items)}</div>) 
+                status = state.modelsBySubmodel[K.IMAGE_SUBMODEL].isActual?
+                    ACTUAL : NOT_ACTUAL
+                    //bad
+                return (items.length >= 1)?
+                <div>{ImageMenu(items)}{UpdateModelPanel(items, status)}</div> :  
+                <div>{ImageMenu(items)}</div>
             case K.MAIN_MENU:
                 return <MainMenu/>
             case K.SCAN_MENU:

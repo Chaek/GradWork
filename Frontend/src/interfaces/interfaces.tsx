@@ -47,7 +47,8 @@ export interface ModelS {
 
 export interface ModelA extends Action {
     model?:ResponseModel<any>,
-    picked?:number
+    picked?:number,
+    actuality?:boolean
     //submodel:string
 }
 

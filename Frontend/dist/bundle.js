@@ -66,6 +66,8 @@
 	    switch (action.type) {
 	        case K.PICK_MODEL:
 	            return Object.assign({}, state, { picked: action.picked });
+	        case K.CHANGE_ACTUALITY:
+	            return Object.assign({}, state, { isActual: action.actuality });
 	        case K.RECEIVE_MODEL:
 	            return {
 	                picked: 0,
@@ -124,6 +126,7 @@
 	        case K.PICK_MODEL:
 	        case K.RECEIVE_MODEL:
 	        case K.REQUEST_MODEL:
+	        case K.CHANGE_ACTUALITY:
 	            return Object.assign({}, state, { [action.submodel]: models(state[action.submodel], action) });
 	        default:
 	            return state;
@@ -166,6 +169,7 @@
 	            case K.PRINTER_SUBMODEL:
 	            case K.IMAGE_SUBMODEL:
 	                store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL, model: data });
+	                store.dispatch({ submodel: data.type, type: K.CHANGE_ACTUALITY, actuality: false });
 	                break;
 	            default:
 	                break;
@@ -202,7 +206,34 @@
 	            .catch(() => { });
 	    };
 	}
+	function postModels(models, submodel) {
+	    return function (dispatch) {
+	        dispatch({ type: K.REQUEST_MODEL });
+	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/postcollection`, {
+	            method: 'post',
+	            headers: {
+	                'Accept': 'application/json, text/plain, */*',
+	                'Content-Type': 'application/json'
+	            },
+	            body: models
+	        })
+	            .then(res => {
+	            if (res.ok)
+	                dispatch({ submodel, type: K.CHANGE_ACTUALITY, actuality: true });
+	            else
+	                console.log("error");
+	        });
+	    };
+	}
 	const ToMainMenuButton = () => React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_MENU, menu: K.MAIN_MENU }) }, "Back");
+	const ACTUAL = 'ACTUAL';
+	const NOT_ACTUAL = 'NOT ACTUAL';
+	const UpdateModelPanel = (items, status) => React.createElement("div", null,
+	    React.createElement("button", { onClick: () => {
+	            store.dispatch(postModels(JSON.stringify(items), K.IMAGE_SUBMODEL));
+	        } }, "Update"),
+	    "Status : ",
+	    status);
 	const MainMenu = () => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Main menu")),
@@ -259,6 +290,7 @@
 	        let items = [];
 	        let item = undefined;
 	        let i = undefined;
+	        let status = '';
 	        switch (menu) {
 	            case K.PRINTER_MENU:
 	                items = state.modelsBySubmodel[K.PRINTER_SUBMODEL].items;
@@ -269,7 +301,14 @@
 	                    React.createElement(PrinterInfo, __assign({}, item))));
 	            case K.IMAGE_MENU:
 	                items = state.modelsBySubmodel[K.IMAGE_SUBMODEL].items;
-	                return (React.createElement("div", null, ImageMenu(items)));
+	                status = state.modelsBySubmodel[K.IMAGE_SUBMODEL].isActual ?
+	                    ACTUAL : NOT_ACTUAL;
+	                //bad
+	                return (items.length >= 1) ?
+	                    React.createElement("div", null,
+	                        ImageMenu(items),
+	                        UpdateModelPanel(items, status)) :
+	                    React.createElement("div", null, ImageMenu(items));
 	            case K.MAIN_MENU:
 	                return React.createElement(MainMenu, null);
 	            case K.SCAN_MENU:
@@ -2895,11 +2934,14 @@
 
 	"use strict";
 	exports.PICK_MODEL = 'PICK_MODEL';
-	exports.RECEIVE_MODEL = 'RECEIVE_MODEL';
+	exports.RECEIVE_MODEL = 'RECEIVE_MODEL_REMOTE';
 	exports.SELECT_SUBMODEL = 'SELECT_SUBMODEL';
 	exports.REQUEST_MODEL = 'REQUEST_MODEL';
 	exports.PREPARE_COMMAND = 'EXECUTE_COMMAND';
 	exports.RECEIVE_COMMAND_STATUS = 'RECEIVE_COMMAND_RESULT';
+	exports.LOAD_MODEL_TO_SERVER = 'LOAD_MODEL_TO_SERVER';
+	exports.CHANGE_ACTUALITY = 'CHANGE_ACTUALITY';
+	exports.CLEAR_SUBMODEL = 'CLEAR_SUBMODEL';
 	exports.SELECT_MENU = 'SELECT_MENU';
 	exports.IMAGE_MENU = 'IMAGE_MENU';
 	exports.PRINTER_MENU = 'PRINTER_MENU';
