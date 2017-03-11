@@ -199,6 +199,11 @@ const MainMenu = () =>
                 store.dispatch({type:K.SELECT_MENU, menu:K.IMAGE_MENU})}>
         Image menu
         </button>
+
+        <button onClick = {()=>
+                store.dispatch({type:K.SELECT_MENU, menu:K.SCAN_MENU})}>
+        Scan menu
+        </button>
     </div>
 
 const ImageMenu = (items:I.Image[]) =>
@@ -228,9 +233,13 @@ const PrinterInfo = (item:I.Printer) =>
     <div>
         <h3><p>Printer Info : </p></h3>
         {Object.keys(item).map(m=><h3><p>{m.toString() + ' : ' + (item as any)[m]}</p></h3>)}
-        <button onClick = {() => 
-            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_SCAN, Command.PRINT))}>
-        Scanning
+        <input ref = {node=>this.input=node}/>
+        
+        <button onClick = {() => {
+            let mes = this.input.value
+            this.input.value = ''
+            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_PRINT, Command.PRINT))}}>
+        Print
         </button>
     </div>
         
@@ -253,6 +262,16 @@ const PrinterMenu = (items:I.Printer[]) =>
             store.dispatch(getModelsWS("Is printer there", K.URL_PRINTER_INFO)) 
         }>
         Update printers from local app
+        </button>
+        <br/>      
+    </div>
+
+const ScanMenu = (/*items:any[]*/) =>
+    <div>
+        <h2><p>Scan Menu</p></h2>
+        <ToMainMenuButton/>
+        <button>
+        Scan
         </button>
         <br/>      
     </div>
@@ -282,6 +301,8 @@ class Main extends React.Component<any, any> {
                 return (<div>{ImageMenu(items)}</div>) 
             case K.MAIN_MENU:
                 return <MainMenu/>
+            case K.SCAN_MENU:
+                return <ScanMenu/>
             default:
                 return <MainMenu/>
         }

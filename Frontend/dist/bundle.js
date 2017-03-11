@@ -45,6 +45,14 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var __assign = (this && this.__assign) || Object.assign || function(t) {
+	    for (var s, i = 1, n = arguments.length; i < n; i++) {
+	        s = arguments[i];
+	        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+	            t[p] = s[p];
+	    }
+	    return t;
+	};
 	const React = __webpack_require__(1);
 	const ReactDOM = __webpack_require__(2);
 	const fetch = __webpack_require__(3);
@@ -72,15 +80,46 @@
 	            return state;
 	    }
 	}
-	function selectedSubmodel(state = K.IMAGE_SUBMODEL, action) {
+	function selectedMenu(state = K.MAIN_MENU, action) {
 	    switch (action.type) {
-	        case (K.SELECT_SUBMODEL):
-	            return action.submodel;
+	        case (K.SELECT_MENU):
+	            return action.menu;
 	        default:
 	            return state;
 	    }
 	}
-	function modelsBySubmodel(state = {}, action) {
+	var Status;
+	(function (Status) {
+	    Status[Status["NOTHING"] = 0] = "NOTHING";
+	    Status[Status["FAIL"] = 0] = "FAIL";
+	    Status[Status["OK"] = 1] = "OK";
+	    Status[Status["WAITING"] = 2] = "WAITING";
+	})(Status || (Status = {}));
+	var Command;
+	(function (Command) {
+	    Command[Command["NOTHING"] = 0] = "NOTHING";
+	    Command[Command["PRINT"] = 0] = "PRINT";
+	    Command[Command["SCAN"] = 1] = "SCAN";
+	    Command[Command["WAITING"] = 2] = "WAITING";
+	})(Command || (Command = {}));
+	const START_COMMANDS = {
+	    type: Command.NOTHING,
+	    status: Status.NOTHING,
+	};
+	function commandInfo(state = START_COMMANDS, action) {
+	    switch (action.type) {
+	        case (K.PREPARE_COMMAND):
+	            return Object.assign({}, state, { type: action.comType, status: Status.WAITING });
+	        case (K.RECEIVE_COMMAND_STATUS):
+	            return Object.assign({}, state, { status: action.status });
+	        default:
+	            return state;
+	    }
+	}
+	function modelsBySubmodel(state = {
+	        [K.IMAGE_SUBMODEL]: K.START_MODEL,
+	        [K.PRINTER_SUBMODEL]: K.START_MODEL,
+	    }, action) {
 	    switch (action.type) {
 	        case K.PICK_MODEL:
 	        case K.RECEIVE_MODEL:
@@ -126,7 +165,6 @@
 	        switch (data.type) {
 	            case K.PRINTER_SUBMODEL:
 	            case K.IMAGE_SUBMODEL:
-	                console.log(data);
 	                store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL, model: data });
 	                break;
 	            default:
@@ -142,6 +180,13 @@
 	}
 	SingletonWS.ws = null;
 	//Thunk function
+	function sendCommandWS(command, url, comType) {
+	    let jsonCommand = JSON.stringify(command);
+	    return function (dispatch) {
+	        dispatch({ comType, type: K.PREPARE_COMMAND });
+	        return SingletonWS.getInstance().send(jsonCommand, url);
+	    };
+	}
 	function getModelsWS(mes, url) {
 	    return function (dispatch) {
 	        dispatch({ type: K.REQUEST_MODEL });
@@ -157,92 +202,98 @@
 	            .catch(() => { });
 	    };
 	}
-	class MainMenu extends React.Component {
+	const ToMainMenuButton = () => React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_MENU, menu: K.MAIN_MENU }) }, "Back");
+	const MainMenu = () => React.createElement("div", null,
+	    React.createElement("h2", null,
+	        React.createElement("p", null, "Main menu")),
+	    React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_MENU, menu: K.PRINTER_MENU }) }, "Printer menu"),
+	    React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_MENU }) }, "Image menu"),
+	    React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_MENU, menu: K.SCAN_MENU }) }, "Scan menu"));
+	const ImageMenu = (items) => React.createElement("div", null,
+	    React.createElement("h2", null,
+	        React.createElement("p", null, "Image Menu")),
+	    React.createElement(ToMainMenuButton, null),
+	    React.createElement("button", { onClick: () => store.dispatch(getModels(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
+	    React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE)) }, "Update from local app"),
+	    React.createElement("br", null),
+	    items.map(m => React.createElement("img", { src: m.Data })));
+	const mes = {
+	    mes: 'hello',
+	    sender: 'frontend'
+	};
+	const PrinterInfo = (item) => React.createElement("div", null,
+	    React.createElement("h3", null,
+	        React.createElement("p", null, "Printer Info : ")),
+	    Object.keys(item).map(m => React.createElement("h3", null,
+	        React.createElement("p", null, m.toString() + ' : ' + item[m]))),
+	    React.createElement("input", { ref: node => this.input = node }),
+	    React.createElement("button", { onClick: () => {
+	            let mes = this.input.value;
+	            this.input.value = '';
+	            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_PRINT, Command.PRINT));
+	        } }, "Print"));
+	const PrinterMenu = (items) => React.createElement("div", null,
+	    React.createElement("h2", null,
+	        React.createElement("p", null, "Printer Menu")),
+	    React.createElement("select", { onChange: e => store.dispatch({
+	            type: K.PICK_MODEL,
+	            submodel: K.PRINTER_SUBMODEL,
+	            picked: e.target.selectedIndex
+	        }) }, items.map(m => React.createElement("option", null, m.Name))),
+	    React.createElement("br", null),
+	    React.createElement(ToMainMenuButton, null),
+	    React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Is printer there", K.URL_PRINTER_INFO)) }, "Update printers from local app"),
+	    React.createElement("br", null));
+	const ScanMenu = () => React.createElement("div", null,
+	    React.createElement("h2", null,
+	        React.createElement("p", null, "Scan Menu")),
+	    React.createElement(ToMainMenuButton, null),
+	    React.createElement("button", null, "Scan"),
+	    React.createElement("br", null));
+	//bad because it would get updated even if it's unnessessary
+	//should be used provider instead
+	class Main extends React.Component {
 	    render() {
-	        return (React.createElement("div", null,
-	            React.createElement("h2", null,
-	                React.createElement("p", null, "Main menu")),
-	            React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_SUBMODEL, submodel: K.PRINTER_SUBMODEL }) }, "Printer menu"),
-	            React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_SUBMODEL, submodel: K.IMAGE_SUBMODEL }) }, "Image menu")));
-	    }
-	}
-	class ImageMenu extends React.Component {
-	    render() {
-	        return (React.createElement("div", null,
-	            React.createElement("h2", null,
-	                React.createElement("p", null, "Image Menu")),
-	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModels(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE)) }, "Update from local app"),
-	            React.createElement("br", null),
-	            this.props.items.map(m => React.createElement("img", { src: m.Data }))));
-	    }
-	}
-	class PrinterInfo extends React.Component {
-	    render() {
-	        //should be rewritten
-	        let casted = this.props.item;
-	        console.log(this.props.item);
-	        return (React.createElement("div", null,
-	            React.createElement("h3", null,
-	                React.createElement("p", null, "Printer Info : ")),
-	            Object.keys(this.props.item).map(m => React.createElement("h3", null,
-	                React.createElement("p", null, m.toString() + ' : ' + casted[m]))),
-	            React.createElement("button", { onClick: () => { store.dispatch(getModelsWS("Give me it", K.URL_PRINTER_SCAN)); } }, "Scanning")));
-	    }
-	}
-	class PrinterMenu extends React.Component {
-	    render() {
-	        return (React.createElement("div", null,
-	            React.createElement("h2", null,
-	                React.createElement("p", null, "Printer Menu")),
-	            React.createElement("select", { onChange: e => store.dispatch({
-	                    type: K.PICK_MODEL,
-	                    submodel: K.PRINTER_SUBMODEL,
-	                    picked: e.target.selectedIndex
-	                }) }, this.props.items.map(m => React.createElement("option", null, m.Name))),
-	            React.createElement("br", null),
-	            React.createElement("button", { onClick: () => ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example")) }, "Back"),
-	            React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Is printer there", K.URL_PRINTER_INFO)) }, "Update printers from local app"),
-	            React.createElement("br", null)));
-	    }
-	}
-	//provider should be used instead
-	function renderManager() {
-	    //should be rewritten
-	    let state = store.getState();
-	    let submodel = state.selectedSubmodel;
-	    let items = [];
-	    let i = undefined;
-	    if (submodel in state.modelsBySubmodel) {
-	        items = state.modelsBySubmodel[submodel].items;
-	        i = state.modelsBySubmodel[submodel].picked;
-	    }
-	    switch (submodel) {
-	        case K.PRINTER_SUBMODEL:
-	            let item = (i === undefined) ? K.DEF_PRINTER_INFO : items[i];
-	            ReactDOM.render(React.createElement("div", null,
-	                React.createElement(PrinterMenu, { items: items }),
-	                React.createElement(PrinterInfo, { item: item })), document.getElementById("example"));
-	            break;
-	        case K.IMAGE_SUBMODEL:
-	            ReactDOM.render(React.createElement(ImageMenu, { items: items }), document.getElementById("example"));
-	            break;
-	        default:
-	            ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example"));
+	        let state = store.getState();
+	        let menu = state.selectedMenu;
+	        let items = [];
+	        let item = undefined;
+	        let i = undefined;
+	        switch (menu) {
+	            case K.PRINTER_MENU:
+	                items = state.modelsBySubmodel[K.PRINTER_SUBMODEL].items;
+	                i = state.modelsBySubmodel[K.PRINTER_SUBMODEL].picked;
+	                item = (i === undefined) ? K.DEF_PRINTER_INFO : items[i];
+	                return (React.createElement("div", null,
+	                    PrinterMenu(items),
+	                    React.createElement(PrinterInfo, __assign({}, item))));
+	            case K.IMAGE_MENU:
+	                items = state.modelsBySubmodel[K.IMAGE_SUBMODEL].items;
+	                return (React.createElement("div", null, ImageMenu(items)));
+	            case K.MAIN_MENU:
+	                return React.createElement(MainMenu, null);
+	            case K.SCAN_MENU:
+	                return React.createElement(ScanMenu, null);
+	            default:
+	                return React.createElement(MainMenu, null);
+	        }
 	    }
 	}
 	//main
 	const loggerMiddleware = createLogger();
 	const reducer = redux_1.combineReducers({
-	    selectedSubmodel,
+	    selectedMenu,
+	    commandInfo,
 	    modelsBySubmodel
 	});
 	const store = redux_2.createStore(reducer, redux_2.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
 	loggerMiddleware // neat middleware that logs actions
 	));
-	store.subscribe(renderManager);
-	ReactDOM.render(React.createElement(MainMenu, null), document.getElementById("example"));
+	function render() {
+	    ReactDOM.render(React.createElement(Main, null), document.getElementById("example"));
+	}
+	store.subscribe(render);
+	render();
 
 
 /***/ },
@@ -2847,12 +2898,18 @@
 	exports.RECEIVE_MODEL = 'RECEIVE_MODEL';
 	exports.SELECT_SUBMODEL = 'SELECT_SUBMODEL';
 	exports.REQUEST_MODEL = 'REQUEST_MODEL';
+	exports.PREPARE_COMMAND = 'EXECUTE_COMMAND';
+	exports.RECEIVE_COMMAND_STATUS = 'RECEIVE_COMMAND_RESULT';
+	exports.SELECT_MENU = 'SELECT_MENU';
+	exports.IMAGE_MENU = 'IMAGE_MENU';
+	exports.PRINTER_MENU = 'PRINTER_MENU';
+	exports.MAIN_MENU = 'MAIN_MENU';
+	exports.SCAN_MENU = 'SCAN_MENU';
 	exports.IMAGE_SUBMODEL = 'IMAGE';
 	exports.PRINTER_SUBMODEL = 'PRINTER';
-	exports.COMMAND_TO_SCAN = 'COMMAND_TO_SCAN';
-	exports.URL_IMAGE_UPDATE = 'ws://localhost:8000/Image/Update';
-	exports.URL_PRINTER_INFO = 'ws://localhost:8000/Printer/Info';
-	exports.URL_PRINTER_SCAN = 'ws://localhost:8000/Printer/Scan';
+	exports.URL_IMAGE_UPDATE = 'ws://localhost:8000/Images/Update';
+	exports.URL_PRINTER_INFO = 'ws://localhost:8000/Printers/Info';
+	exports.URL_PRINTER_PRINT = 'ws://localhost:8000/Printers/Print';
 	exports.START_MODEL = {
 	    isFetching: false,
 	    isActual: true,
