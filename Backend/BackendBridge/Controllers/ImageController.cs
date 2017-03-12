@@ -34,6 +34,27 @@ namespace BackendBridge.Controllers
         }
 
         [System.Web.Http.HttpPost]
+        public IHttpActionResult PostCollection(IEnumerable<Image> images)
+        {
+            if (images == null)
+            {
+                throw new ArgumentNullException("item");
+            }
+
+            try
+            {
+                foreach (var im in images)
+                {
+                    repository.Add(im);
+                }
+            } catch
+            {
+                return Content(HttpStatusCode.BadRequest, "Something bad has happend");
+            }
+            return Ok();
+        }
+
+        [System.Web.Http.HttpPost]
         public IHttpActionResult Post(Image image)
         {
             if (image == null)
@@ -42,7 +63,30 @@ namespace BackendBridge.Controllers
             }
 
             //try catch
-            repository.Add(image);
+            try
+            {
+                repository.Add(image);
+            }
+            catch
+            {
+                return Content(HttpStatusCode.BadRequest, "Something bad has happend");
+            }
+            return Ok();
+        }
+
+        [System.Web.Http.HttpDelete]
+        public IHttpActionResult Remove(Image image)
+        {
+
+            //try catch
+            try
+            {
+                repository.Remove(image.ID);
+            }
+            catch
+            {
+                return Content(HttpStatusCode.BadRequest, "Something bad has happend");
+            }
             return Ok();
         }
     }

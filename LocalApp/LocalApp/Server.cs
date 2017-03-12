@@ -10,15 +10,16 @@ namespace WebSocketsClientServer
     {
         static void Main(string[] args)
         {
+            
             var wssv = new WebSocketServer("ws://localhost:8000");
             wssv.AddWebSocketService<Behaviors.Printers.Info>("/Printers/Info");
             wssv.AddWebSocketService<Behaviors.Images.Update>("/Images/Update");
-            wssv.AddWebSocketService<Behaviors.Printers.Scan>("/Printers/Scan");
-
+            wssv.AddWebSocketService<Behaviors.Printers.Print>("/Printers/Print");
             wssv.Start();
 
             Console.ReadKey(true);
             wssv.Stop();
+            
             
         }
     }

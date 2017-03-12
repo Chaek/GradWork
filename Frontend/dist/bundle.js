@@ -62,19 +62,48 @@
 	const redux_2 = __webpack_require__(5);
 	const K = __webpack_require__(34);
 	//Reducer
+	const ITEM_CHANGE_ACTUALITY = 'ITEM_CHANGE_ACTUALITY';
+	function items(state, action) {
+	    let i = state.findIndex(v => action.ref == v.ref);
+	    switch (action.type) {
+	        case K.REMOVE_ITEM:
+	            return [...state.slice(0, i), ...state.slice(i + 1)];
+	        case K.CHANGE_ACTUALITY:
+	            return [...state.slice(0, i),
+	                Object.assign({}, state[i], { isActual: action.actuality }),
+	                ...state.slice(i + 1)];
+	        //Object.assign({}, state, {isActual:action.actuality}) : state 
+	        case K.RECEIVE_MODEL_REMOTE:
+	            return action.model.data.map((v, i) => Object.assign({}, v, { isActual: true, ref: i }));
+	        case K.RECEIVE_MODEL_LOCAL:
+	            //return Object.assign({}, state, {isActual:false, ref:action.ref})
+	            return action.model.data.map((v, i) => Object.assign({}, v, { isActual: false, ref: i }));
+	        default:
+	            return state;
+	    }
+	}
 	function models(state = K.START_MODEL, action) {
 	    switch (action.type) {
 	        case K.PICK_MODEL:
 	            return Object.assign({}, state, { picked: action.picked });
+	        case K.REMOVE_ITEM:
 	        case K.CHANGE_ACTUALITY:
-	            return Object.assign({}, state, { isActual: action.actuality });
-	        case K.RECEIVE_MODEL:
+	            return Object.assign({}, state, { items: items(state.items, action) });
+	        case K.RECEIVE_MODEL_REMOTE:
 	            return {
 	                picked: 0,
 	                isFetching: false,
 	                isActual: true,
 	                lastUpdated: Date.now(),
-	                items: action.model.data.map(m => m)
+	                items: items(state.items, action)
+	            };
+	        case K.RECEIVE_MODEL_LOCAL:
+	            return {
+	                picked: 0,
+	                isFetching: false,
+	                isActual: false,
+	                lastUpdated: Date.now(),
+	                items: items(state.items, action) //action.model.data.map((v, i) => items(v, {...action, ref:i}))
 	            };
 	        case K.REQUEST_MODEL:
 	            return Object.assign({}, state, { isFetching: true });
@@ -123,8 +152,11 @@
 	        [K.PRINTER_SUBMODEL]: K.START_MODEL,
 	    }, action) {
 	    switch (action.type) {
+	        //case K.REMOVE:
 	        case K.PICK_MODEL:
-	        case K.RECEIVE_MODEL:
+	        case K.REMOVE_ITEM:
+	        case K.RECEIVE_MODEL_REMOTE:
+	        case K.RECEIVE_MODEL_LOCAL:
 	        case K.REQUEST_MODEL:
 	        case K.CHANGE_ACTUALITY:
 	            return Object.assign({}, state, { [action.submodel]: models(state[action.submodel], action) });
@@ -168,8 +200,8 @@
 	        switch (data.type) {
 	            case K.PRINTER_SUBMODEL:
 	            case K.IMAGE_SUBMODEL:
-	                store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL, model: data });
-	                store.dispatch({ submodel: data.type, type: K.CHANGE_ACTUALITY, actuality: false });
+	                store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL_LOCAL, model: data });
+	                //store.dispatch({ID, submodel:data.type, type: K.CHANGE_ACTUALITY, actuality:false})
 	                break;
 	            default:
 	                break;
@@ -202,38 +234,57 @@
 	        dispatch({ type: K.REQUEST_MODEL });
 	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
 	            .then(response => response.json())
-	            .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL, model: json }))
+	            .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL_REMOTE, model: json }))
 	            .catch(() => { });
 	    };
 	}
-	function postModels(models, submodel) {
+	function postModels(model, submodel, index) {
 	    return function (dispatch) {
 	        dispatch({ type: K.REQUEST_MODEL });
-	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/postcollection`, {
+	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/post`, {
 	            method: 'post',
 	            headers: {
 	                'Accept': 'application/json, text/plain, */*',
 	                'Content-Type': 'application/json'
 	            },
-	            body: models
+	            body: model
 	        })
 	            .then(res => {
 	            if (res.ok)
-	                dispatch({ submodel, type: K.CHANGE_ACTUALITY, actuality: true });
+	                dispatch({ ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true });
 	            else
 	                console.log("error");
+	        });
+	    };
+	}
+	//should be deleted by id but there are were some proplems
+	function removeModel(model, submodel, index) {
+	    return function (dispatch) {
+	        //dispatch({ type: K.REQUEST_MODEL })
+	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/remove`, {
+	            method: 'delete',
+	            headers: {
+	                'Accept': 'application/json, text/plain, */*',
+	                'Content-Type': 'application/json'
+	            },
+	            body: model
+	        })
+	            .then(res => {
+	            if (res.ok)
+	                dispatch({ ref: index, submodel, type: K.REMOVE_ITEM });
 	        });
 	    };
 	}
 	const ToMainMenuButton = () => React.createElement("button", { onClick: () => store.dispatch({ type: K.SELECT_MENU, menu: K.MAIN_MENU }) }, "Back");
 	const ACTUAL = 'ACTUAL';
 	const NOT_ACTUAL = 'NOT ACTUAL';
-	const UpdateModelPanel = (items, status) => React.createElement("div", null,
+	const UpdateModelPanel = (item) => React.createElement("div", null,
 	    React.createElement("button", { onClick: () => {
-	            store.dispatch(postModels(JSON.stringify(items), K.IMAGE_SUBMODEL));
+	            store.dispatch(postModels(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref));
 	        } }, "Update"),
+	    React.createElement("button", { onClick: () => { store.dispatch(removeModel(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref)); } }, "Delete"),
 	    "Status : ",
-	    status);
+	    item.isActual ? ACTUAL : NOT_ACTUAL);
 	const MainMenu = () => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Main menu")),
@@ -247,7 +298,9 @@
 	    React.createElement("button", { onClick: () => store.dispatch(getModels(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
 	    React.createElement("button", { onClick: () => store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE)) }, "Update from local app"),
 	    React.createElement("br", null),
-	    items.map(m => React.createElement("img", { src: m.Data })));
+	    items.map((v, i) => React.createElement("div", null,
+	        React.createElement("img", { src: v.Data }),
+	        UpdateModelPanel(v))));
 	const mes = {
 	    mes: 'hello',
 	    sender: 'frontend'
@@ -301,14 +354,8 @@
 	                    React.createElement(PrinterInfo, __assign({}, item))));
 	            case K.IMAGE_MENU:
 	                items = state.modelsBySubmodel[K.IMAGE_SUBMODEL].items;
-	                status = state.modelsBySubmodel[K.IMAGE_SUBMODEL].isActual ?
-	                    ACTUAL : NOT_ACTUAL;
 	                //bad
-	                return (items.length >= 1) ?
-	                    React.createElement("div", null,
-	                        ImageMenu(items),
-	                        UpdateModelPanel(items, status)) :
-	                    React.createElement("div", null, ImageMenu(items));
+	                return React.createElement("div", null, ImageMenu(items));
 	            case K.MAIN_MENU:
 	                return React.createElement(MainMenu, null);
 	            case K.SCAN_MENU:
@@ -2934,7 +2981,8 @@
 
 	"use strict";
 	exports.PICK_MODEL = 'PICK_MODEL';
-	exports.RECEIVE_MODEL = 'RECEIVE_MODEL_REMOTE';
+	exports.RECEIVE_MODEL_LOCAL = 'RECEIVE_MODEL_LOCAL';
+	exports.RECEIVE_MODEL_REMOTE = 'RECEIVE_MODEL_REMOTE';
 	exports.SELECT_SUBMODEL = 'SELECT_SUBMODEL';
 	exports.REQUEST_MODEL = 'REQUEST_MODEL';
 	exports.PREPARE_COMMAND = 'EXECUTE_COMMAND';
@@ -2942,6 +2990,7 @@
 	exports.LOAD_MODEL_TO_SERVER = 'LOAD_MODEL_TO_SERVER';
 	exports.CHANGE_ACTUALITY = 'CHANGE_ACTUALITY';
 	exports.CLEAR_SUBMODEL = 'CLEAR_SUBMODEL';
+	exports.REMOVE_ITEM = 'REMOVE_ITEM';
 	exports.SELECT_MENU = 'SELECT_MENU';
 	exports.IMAGE_MENU = 'IMAGE_MENU';
 	exports.PRINTER_MENU = 'PRINTER_MENU';

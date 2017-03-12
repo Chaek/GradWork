@@ -11,19 +11,50 @@ import * as I from './interfaces/interfaces'
 import * as K from './constants/constants'
 
 //Reducer
+const ITEM_CHANGE_ACTUALITY = 'ITEM_CHANGE_ACTUALITY' 
+
+function items(state:any[], action:I.ModelA) {
+    let i = state.findIndex(v=>action.ref==v.ref)
+    switch (action.type) {
+        case K.REMOVE_ITEM:
+            return [...state.slice(0, i), ...state.slice(i+1)]
+        case K.CHANGE_ACTUALITY:
+            return [...state.slice(0, i), 
+                    Object.assign({}, state[i], {isActual:action.actuality}),
+                    ...state.slice(i+1)]
+                //Object.assign({}, state, {isActual:action.actuality}) : state 
+        case K.RECEIVE_MODEL_REMOTE:
+            return action.model.data.map((v, i) => Object.assign({}, v, {isActual:true, ref:i}))
+        case K.RECEIVE_MODEL_LOCAL:
+            //return Object.assign({}, state, {isActual:false, ref:action.ref})
+            return action.model.data.map((v, i) => Object.assign({}, v, {isActual:false, ref:i}))
+        default:
+            return state
+    }
+}
+
 function models(state:I.ModelS = K.START_MODEL, action:I.ModelA) {
     switch (action.type) {
         case K.PICK_MODEL:
             return Object.assign({}, state, { picked: action.picked })
+        case K.REMOVE_ITEM:
         case K.CHANGE_ACTUALITY:
-            return Object.assign({}, state, { isActual: action.actuality })
-        case K.RECEIVE_MODEL:
+            return Object.assign({}, state, { items: items(state.items, action) })
+        case K.RECEIVE_MODEL_REMOTE:
             return { 
                 picked: 0,
                 isFetching: false, 
                 isActual: true,
                 lastUpdated: Date.now(),
-                items: action.model.data.map(m => m)
+                items: items(state.items, action) 
+            }
+        case K.RECEIVE_MODEL_LOCAL:
+            return {
+                picked: 0,
+                isFetching: false, 
+                isActual: false,
+                lastUpdated: Date.now(),
+                items: items(state.items, action)//action.model.data.map((v, i) => items(v, {...action, ref:i}))
             }
         case K.REQUEST_MODEL:
             return Object.assign({}, state, { isFetching: true })
@@ -85,8 +116,11 @@ function modelsBySubmodel(state:any =
     }, 
     action:I.SubmodelA) {
     switch (action.type) {
+        //case K.REMOVE:
         case K.PICK_MODEL:
-        case K.RECEIVE_MODEL:
+        case K.REMOVE_ITEM:
+        case K.RECEIVE_MODEL_REMOTE:
+        case K.RECEIVE_MODEL_LOCAL:
         case K.REQUEST_MODEL:
         case K.CHANGE_ACTUALITY:
             return Object.assign({}, state, 
@@ -142,8 +176,8 @@ class SingletonWS {
         switch (data.type) {
             case K.PRINTER_SUBMODEL:
             case K.IMAGE_SUBMODEL:
-                store.dispatch({submodel:data.type, type: K.RECEIVE_MODEL, model: data })
-                store.dispatch({submodel:data.type, type: K.CHANGE_ACTUALITY, actuality:false})
+                store.dispatch({submodel:data.type, type: K.RECEIVE_MODEL_LOCAL, model: data })
+                //store.dispatch({ID, submodel:data.type, type: K.CHANGE_ACTUALITY, actuality:false})
                 break;
             default:
                 break;
@@ -180,28 +214,47 @@ function getModels(submodel:string) {
         return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
                .then(response => response.json())
                //why can't assign to ResponseModel<Image>?
-               .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL, model: json }))
+               .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL_REMOTE, model: json }))
                .catch(() => {})
     }
 }
 
 
-function postModels(models:string, submodel:string) {
+function postModels(model:string, submodel:string, index:number) {
     return function(dispatch:any) { 
         dispatch({ type: K.REQUEST_MODEL })
-        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/postcollection`,
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/post`,
             {
                 method: 'post',
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'
                 },
-                body:models
+                body:model
             })
             //why can't assign to ResponseModel<Image>?
             .then(res => {
-                if (res.ok) dispatch({ submodel, type: K.CHANGE_ACTUALITY, actuality: true })
+                if (res.ok) dispatch({ ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true })
                 else console.log("error")
+            })
+    }
+}
+
+//should be deleted by id but there are were some proplems
+function removeModel(model:string, submodel:string, index:number) {
+    return function(dispatch:any) { 
+        //dispatch({ type: K.REQUEST_MODEL })
+        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/remove`,
+            {
+                method: 'delete',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                },
+                body:model
+            })
+            //why can't assign to ResponseModel<Image>?
+            .then(res => { if (res.ok) dispatch({ref:index, submodel, type: K.REMOVE_ITEM})
             })
     }
 }
@@ -214,12 +267,16 @@ const ToMainMenuButton = () =>
 const ACTUAL = 'ACTUAL'
 const NOT_ACTUAL = 'NOT ACTUAL'
 
-const UpdateModelPanel = (items:any[], status:string) =>
+const UpdateModelPanel = (item:any) =>
     <div>
         <button onClick={()=>{
-            store.dispatch(postModels(JSON.stringify(items), K.IMAGE_SUBMODEL))}}>Update
+            store.dispatch(postModels(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref))}}>
+            Update
         </button>
-        Status : {status}
+        <button onClick={()=>{store.dispatch(removeModel(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref))}}>
+            Delete
+        </button>
+        Status : {item.isActual? ACTUAL : NOT_ACTUAL}
     </div>
 
 const MainMenu = () =>
@@ -257,7 +314,12 @@ const ImageMenu = (items:I.Image[]) =>
         Update from local app
         </button>
         <br/>
-        {items.map(m=><img src = {m.Data}/>)}
+        {items.map((v, i)=>
+            <div>
+            <img src = {v.Data}/>
+            {UpdateModelPanel(v)}
+            </div> )
+        }
     </div>
 
 const mes:any = {
@@ -335,12 +397,8 @@ class Main extends React.Component<any, any> {
                     </div>)
             case K.IMAGE_MENU:
                 items = state.modelsBySubmodel[K.IMAGE_SUBMODEL].items
-                status = state.modelsBySubmodel[K.IMAGE_SUBMODEL].isActual?
-                    ACTUAL : NOT_ACTUAL
                     //bad
-                return (items.length >= 1)?
-                <div>{ImageMenu(items)}{UpdateModelPanel(items, status)}</div> :  
-                <div>{ImageMenu(items)}</div>
+                return <div>{ImageMenu(items)}</div>
             case K.MAIN_MENU:
                 return <MainMenu/>
             case K.SCAN_MENU:

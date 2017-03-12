@@ -4,18 +4,60 @@ using WebSocketSharp;
 using WebSocketSharp.Server;
 using System.Management;
 using System;
+using System.Drawing;
+using System.IO;
 
 namespace WebSocketsClientServer.Behaviors
 {
     namespace Printers
     {
-        class Scan : WebSocketBehavior
+        class Print : WebSocketBehavior
         {
+            static int counter = 0;
+
             protected override void OnMessage(MessageEventArgs e)
             {
+                Send("Wait");
                 var data = e.Data;
+                //string file = "../../../images/ordinary_cat.jpg";
+                //string name = Path.GetFileName(file);
 
-                //Send("Printer Scan is here");
+                using (var pd = new System.Drawing.Printing.PrintDocument())
+                {
+                    pd.PrintPage += (a, b) =>
+                    {
+                        //in case of printing an image
+                        //var img = System.Drawing.Image.FromFile(file);
+
+                        b.Graphics.DrawString(data, 
+                            new Font("Times New Roman", 30), 
+                            new SolidBrush(Color.Black), 
+                            new RectangleF(0, 0, 
+                            pd.DefaultPageSettings.PrintableArea.Width, 
+                            pd.DefaultPageSettings.PrintableArea.Height)
+                        );
+
+                        // This uses a 50 pixel margin - adjust as needed
+                        //b.Graphics.DrawImage(img, new Point(50, 50));
+                        
+                    };
+                    pd.EndPrint += (sender, ev) => {
+                        Send("Ok");
+                    };
+                    
+                    pd.PrinterSettings.PrintToFile = true;
+                    pd.PrinterSettings.PrintFileName = "../../../printed/" + counter + ".oxps";
+                    counter++;
+                    pd.PrinterSettings.PrinterName = "Microsoft XPS Document Writer";
+                    try
+                    {
+                        pd.Print();
+                    }
+                    catch
+                    {
+                        Send("Failed");
+                    }
+                }
             }
         }
 

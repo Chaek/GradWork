@@ -15,7 +15,7 @@ using System.Web.Http.Results;
 namespace BackendBridge.UnitTests
 {
     [TestClass]
-    public class ProductApiTest
+    public class APITests
     {
         [TestMethod]
         public void Can_Get_By_Id()

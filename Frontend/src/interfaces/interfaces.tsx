@@ -42,16 +42,22 @@ export interface ModelS {
     isFetching: boolean,
     isActual: boolean,
     items: string[]
-    lastUpdated?: Date
+    lastUpdated?: Date,
+    ref?:number
 }
 
 export interface ModelA extends Action {
     model?:ResponseModel<any>,
     picked?:number,
-    actuality?:boolean
+    actuality?:boolean,
+    ref?:number
     //submodel:string
 }
 
 export interface SubmodelA extends Action {
     submodel:string,
+}
+
+export interface Item {
+    ref:number
 }
