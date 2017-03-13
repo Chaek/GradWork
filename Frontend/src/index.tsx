@@ -14,8 +14,16 @@ import * as K from './constants/constants'
 const ITEM_CHANGE_ACTUALITY = 'ITEM_CHANGE_ACTUALITY' 
 
 function items(state:any[], action:I.ModelA) {
-    let i = state.findIndex(v=>action.ref==v.ref)
+    let i = state.findIndex(v=>action.Ref==v.Ref)
+    ///if (i == -1)
     switch (action.type) {
+        case K.UPDATE_ITEM:
+            console.log ([...state.slice(0, i), 
+                    Object.assign({}, action.item, {isActual:false}), 
+                    ...state.slice(i+1)])
+            return [...state.slice(0, i), 
+                    action.item, 
+                    ...state.slice(i+1)]
         case K.REMOVE_ITEM:
             return [...state.slice(0, i), ...state.slice(i+1)]
         case K.CHANGE_ACTUALITY:
@@ -24,10 +32,10 @@ function items(state:any[], action:I.ModelA) {
                     ...state.slice(i+1)]
                 //Object.assign({}, state, {isActual:action.actuality}) : state 
         case K.RECEIVE_MODEL_REMOTE:
-            return action.model.data.map((v, i) => Object.assign({}, v, {isActual:true, ref:i}))
+            return action.model.data.map((v, i) => Object.assign({}, v, {isActual:true, Ref:i}))
         case K.RECEIVE_MODEL_LOCAL:
             //return Object.assign({}, state, {isActual:false, ref:action.ref})
-            return action.model.data.map((v, i) => Object.assign({}, v, {isActual:false, ref:i}))
+            return action.model.data.map((v, i) => Object.assign({}, v, {isActual:false, Ref:i}))
         default:
             return state
     }
@@ -37,6 +45,7 @@ function models(state:I.ModelS = K.START_MODEL, action:I.ModelA) {
     switch (action.type) {
         case K.PICK_MODEL:
             return Object.assign({}, state, { picked: action.picked })
+        case K.UPDATE_ITEM:
         case K.REMOVE_ITEM:
         case K.CHANGE_ACTUALITY:
             return Object.assign({}, state, { items: items(state.items, action) })
@@ -76,32 +85,43 @@ function selectedMenu(state:string = K.MAIN_MENU, action:MenuA) {
     }
 }
 
-enum Status { NOTHING, FAIL = 0, OK, WAITING }
-enum Command { NOTHING, PRINT = 0, SCAN, WAITING }
+const COMMAND_STATUS_NOTHING = 'COMMAND_STATUS_NOTHING'
+const COMMAND_STATUS_FAIL = 'COMMAND_STATUS_NOTHING'
+const COMMAND_STATUS_OK = 'COMMAND_STATUS_OK'
+const COMMAND_STATUS_WAITING = 'COMMAND_STATUS_OK'
+
+const COMMAND_TYPE_NOTHING = 'COMMAND_TYPE_NOTHING'
+const COMMAND_TYPE_PRINT = 'COMMAND_TYPE_PRINT'
+const COMMAND_TYPE_SCAN = 'COMMAND_TYPE_PRINT'
+const COMMAND_TYPE_WAITING = 'COMMAND_TYPE_PRINT'
+const COMMAND_TYPE_EDIT = 'COMMAND_TYPE_PRINT'
+
+
+//enum Command { NOTHING, PRINT = 0, SCAN, WAITING, EDIT }
 
 //may be a massive of commands
 
 interface CommandS {
-    type:Command,
-    status:Status,
+    type:string,
+    status:string,
     priority?:number
 }
 
 interface CommandA extends I.Action {
-    comType:Command,
-    status:Status,
+    comType:string,
+    status:string,
     priority?:number
 }
 
 const START_COMMANDS:CommandS = {
-    type:Command.NOTHING,
-    status:Status.NOTHING,
+    type:COMMAND_TYPE_NOTHING,
+    status:COMMAND_STATUS_WAITING,
 }
 
 function commandInfo(state:CommandS = START_COMMANDS, action:CommandA) {
     switch (action.type) {
     case (K.PREPARE_COMMAND):
-        return Object.assign({}, state, {type:action.comType, status:Status.WAITING})
+        return Object.assign({}, state, {type:action.comType, status:COMMAND_STATUS_WAITING})
     case (K.RECEIVE_COMMAND_STATUS):
         return Object.assign({}, state, {status:action.status})
     default:
@@ -117,6 +137,7 @@ function modelsBySubmodel(state:any =
     action:I.SubmodelA) {
     switch (action.type) {
         //case K.REMOVE:
+        case K.UPDATE_ITEM:
         case K.PICK_MODEL:
         case K.REMOVE_ITEM:
         case K.RECEIVE_MODEL_REMOTE:
@@ -164,8 +185,10 @@ class SingletonWS {
             }
 
             SingletonWS.ws.onmessage = (msg:MessageEvent) => {
+                //store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE))
+
                 this.analyzeMessage(msg)
-                SingletonWS.ws.close();
+                SingletonWS.ws.close()
             }
         }); 
     }
@@ -176,7 +199,16 @@ class SingletonWS {
         switch (data.type) {
             case K.PRINTER_SUBMODEL:
             case K.IMAGE_SUBMODEL:
-                store.dispatch({submodel:data.type, type: K.RECEIVE_MODEL_LOCAL, model: data })
+                switch(data.mes) {
+                    case COMMAND_STATUS_WAITING:
+                    case COMMAND_STATUS_OK:
+                        //console.log(data.data)
+                        //console.log()
+                        store.dispatch({Ref: data.data.Ref, submodel:data.type, type: K.UPDATE_ITEM, item:data.data})
+                        break;
+                    default:
+                        store.dispatch({submodel:data.type, type: K.RECEIVE_MODEL_LOCAL, model: data })
+                    }
                 //store.dispatch({ID, submodel:data.type, type: K.CHANGE_ACTUALITY, actuality:false})
                 break;
             default:
@@ -193,7 +225,7 @@ class SingletonWS {
 }
 
 //Thunk function
-function sendCommandWS(command:any, url:string, comType:Command) {
+function sendCommandWS(command:any, url:string, comType:string) {
     let jsonCommand:string = JSON.stringify(command)
     return function(dispatch:any) {
         dispatch({comType, type: K.PREPARE_COMMAND})
@@ -234,7 +266,7 @@ function postModels(model:string, submodel:string, index:number) {
             })
             //why can't assign to ResponseModel<Image>?
             .then(res => {
-                if (res.ok) dispatch({ ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true })
+                if (res.ok) dispatch({ Ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true })
                 else console.log("error")
             })
     }
@@ -254,7 +286,7 @@ function removeModel(model:string, submodel:string, index:number) {
                 body:model
             })
             //why can't assign to ResponseModel<Image>?
-            .then(res => { if (res.ok) dispatch({ref:index, submodel, type: K.REMOVE_ITEM})
+            .then(res => { if (res.ok) dispatch({Ref:index, submodel, type: K.REMOVE_ITEM})
             })
     }
 }
@@ -270,11 +302,17 @@ const NOT_ACTUAL = 'NOT ACTUAL'
 const UpdateModelPanel = (item:any) =>
     <div>
         <button onClick={()=>{
-            store.dispatch(postModels(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref))}}>
+            store.dispatch(postModels(JSON.stringify(item), K.IMAGE_SUBMODEL, item.Ref))}}>
             Update
         </button>
-        <button onClick={()=>{store.dispatch(removeModel(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref))}}>
+        <button onClick={()=>{store.dispatch(removeModel(JSON.stringify(item), K.IMAGE_SUBMODEL, item.Ref))}}>
             Delete
+        </button>
+        <button onClick={()=>{
+            //bad
+            store.dispatch(sendCommandWS(JSON.stringify(item), 
+            K.URL_IMAGE_EDIT, COMMAND_TYPE_EDIT))}}>
+            Edit
         </button>
         Status : {item.isActual? ACTUAL : NOT_ACTUAL}
     </div>
@@ -336,7 +374,7 @@ const PrinterInfo = (item:I.Printer) =>
         <button onClick = {() => {
             let mes = this.input.value
             this.input.value = ''
-            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_PRINT, Command.PRINT))}}>
+            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_PRINT, COMMAND_TYPE_PRINT))}}>
         Print
         </button>
     </div>

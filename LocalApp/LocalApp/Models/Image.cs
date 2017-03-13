@@ -13,4 +13,15 @@ namespace WebSocketsClientServer.Models
         public string Data { get; set; }
 
     }
+
+    //rewrite it
+    public class AdvancedImage
+    {
+        public bool isActual { get; set; }
+        public int Ref { get; set; }
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public string Data { get; set; }
+
+    }
 }

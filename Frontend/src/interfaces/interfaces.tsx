@@ -43,14 +43,15 @@ export interface ModelS {
     isActual: boolean,
     items: string[]
     lastUpdated?: Date,
-    ref?:number
+    Ref?:number
 }
 
 export interface ModelA extends Action {
     model?:ResponseModel<any>,
     picked?:number,
     actuality?:boolean,
-    ref?:number
+    Ref?:number,
+    item?:any
     //submodel:string
 }
 

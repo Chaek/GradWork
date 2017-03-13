@@ -64,8 +64,16 @@
 	//Reducer
 	const ITEM_CHANGE_ACTUALITY = 'ITEM_CHANGE_ACTUALITY';
 	function items(state, action) {
-	    let i = state.findIndex(v => action.ref == v.ref);
+	    let i = state.findIndex(v => action.Ref == v.Ref);
+	    ///if (i == -1)
 	    switch (action.type) {
+	        case K.UPDATE_ITEM:
+	            console.log([...state.slice(0, i),
+	                Object.assign({}, action.item, { isActual: false }),
+	                ...state.slice(i + 1)]);
+	            return [...state.slice(0, i),
+	                action.item,
+	                ...state.slice(i + 1)];
 	        case K.REMOVE_ITEM:
 	            return [...state.slice(0, i), ...state.slice(i + 1)];
 	        case K.CHANGE_ACTUALITY:
@@ -74,10 +82,10 @@
 	                ...state.slice(i + 1)];
 	        //Object.assign({}, state, {isActual:action.actuality}) : state 
 	        case K.RECEIVE_MODEL_REMOTE:
-	            return action.model.data.map((v, i) => Object.assign({}, v, { isActual: true, ref: i }));
+	            return action.model.data.map((v, i) => Object.assign({}, v, { isActual: true, Ref: i }));
 	        case K.RECEIVE_MODEL_LOCAL:
 	            //return Object.assign({}, state, {isActual:false, ref:action.ref})
-	            return action.model.data.map((v, i) => Object.assign({}, v, { isActual: false, ref: i }));
+	            return action.model.data.map((v, i) => Object.assign({}, v, { isActual: false, Ref: i }));
 	        default:
 	            return state;
 	    }
@@ -86,6 +94,7 @@
 	    switch (action.type) {
 	        case K.PICK_MODEL:
 	            return Object.assign({}, state, { picked: action.picked });
+	        case K.UPDATE_ITEM:
 	        case K.REMOVE_ITEM:
 	        case K.CHANGE_ACTUALITY:
 	            return Object.assign({}, state, { items: items(state.items, action) });
@@ -119,28 +128,23 @@
 	            return state;
 	    }
 	}
-	var Status;
-	(function (Status) {
-	    Status[Status["NOTHING"] = 0] = "NOTHING";
-	    Status[Status["FAIL"] = 0] = "FAIL";
-	    Status[Status["OK"] = 1] = "OK";
-	    Status[Status["WAITING"] = 2] = "WAITING";
-	})(Status || (Status = {}));
-	var Command;
-	(function (Command) {
-	    Command[Command["NOTHING"] = 0] = "NOTHING";
-	    Command[Command["PRINT"] = 0] = "PRINT";
-	    Command[Command["SCAN"] = 1] = "SCAN";
-	    Command[Command["WAITING"] = 2] = "WAITING";
-	})(Command || (Command = {}));
+	const COMMAND_STATUS_NOTHING = 'COMMAND_STATUS_NOTHING';
+	const COMMAND_STATUS_FAIL = 'COMMAND_STATUS_NOTHING';
+	const COMMAND_STATUS_OK = 'COMMAND_STATUS_OK';
+	const COMMAND_STATUS_WAITING = 'COMMAND_STATUS_OK';
+	const COMMAND_TYPE_NOTHING = 'COMMAND_TYPE_NOTHING';
+	const COMMAND_TYPE_PRINT = 'COMMAND_TYPE_PRINT';
+	const COMMAND_TYPE_SCAN = 'COMMAND_TYPE_PRINT';
+	const COMMAND_TYPE_WAITING = 'COMMAND_TYPE_PRINT';
+	const COMMAND_TYPE_EDIT = 'COMMAND_TYPE_PRINT';
 	const START_COMMANDS = {
-	    type: Command.NOTHING,
-	    status: Status.NOTHING,
+	    type: COMMAND_TYPE_NOTHING,
+	    status: COMMAND_STATUS_WAITING,
 	};
 	function commandInfo(state = START_COMMANDS, action) {
 	    switch (action.type) {
 	        case (K.PREPARE_COMMAND):
-	            return Object.assign({}, state, { type: action.comType, status: Status.WAITING });
+	            return Object.assign({}, state, { type: action.comType, status: COMMAND_STATUS_WAITING });
 	        case (K.RECEIVE_COMMAND_STATUS):
 	            return Object.assign({}, state, { status: action.status });
 	        default:
@@ -153,6 +157,7 @@
 	    }, action) {
 	    switch (action.type) {
 	        //case K.REMOVE:
+	        case K.UPDATE_ITEM:
 	        case K.PICK_MODEL:
 	        case K.REMOVE_ITEM:
 	        case K.RECEIVE_MODEL_REMOTE:
@@ -189,6 +194,7 @@
 	                console.log("Connection with local app is lost");
 	            };
 	            SingletonWS.ws.onmessage = (msg) => {
+	                //store.dispatch(getModelsWS("Give me it", K.URL_IMAGE_UPDATE))
 	                this.analyzeMessage(msg);
 	                SingletonWS.ws.close();
 	            };
@@ -200,7 +206,16 @@
 	        switch (data.type) {
 	            case K.PRINTER_SUBMODEL:
 	            case K.IMAGE_SUBMODEL:
-	                store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL_LOCAL, model: data });
+	                switch (data.mes) {
+	                    case COMMAND_STATUS_WAITING:
+	                    case COMMAND_STATUS_OK:
+	                        //console.log(data.data)
+	                        //console.log()
+	                        store.dispatch({ Ref: data.data.Ref, submodel: data.type, type: K.UPDATE_ITEM, item: data.data });
+	                        break;
+	                    default:
+	                        store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL_LOCAL, model: data });
+	                }
 	                //store.dispatch({ID, submodel:data.type, type: K.CHANGE_ACTUALITY, actuality:false})
 	                break;
 	            default:
@@ -251,7 +266,7 @@
 	        })
 	            .then(res => {
 	            if (res.ok)
-	                dispatch({ ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true });
+	                dispatch({ Ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true });
 	            else
 	                console.log("error");
 	        });
@@ -271,7 +286,7 @@
 	        })
 	            .then(res => {
 	            if (res.ok)
-	                dispatch({ ref: index, submodel, type: K.REMOVE_ITEM });
+	                dispatch({ Ref: index, submodel, type: K.REMOVE_ITEM });
 	        });
 	    };
 	}
@@ -280,9 +295,13 @@
 	const NOT_ACTUAL = 'NOT ACTUAL';
 	const UpdateModelPanel = (item) => React.createElement("div", null,
 	    React.createElement("button", { onClick: () => {
-	            store.dispatch(postModels(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref));
+	            store.dispatch(postModels(JSON.stringify(item), K.IMAGE_SUBMODEL, item.Ref));
 	        } }, "Update"),
-	    React.createElement("button", { onClick: () => { store.dispatch(removeModel(JSON.stringify(item), K.IMAGE_SUBMODEL, item.ref)); } }, "Delete"),
+	    React.createElement("button", { onClick: () => { store.dispatch(removeModel(JSON.stringify(item), K.IMAGE_SUBMODEL, item.Ref)); } }, "Delete"),
+	    React.createElement("button", { onClick: () => {
+	            //bad
+	            store.dispatch(sendCommandWS(JSON.stringify(item), K.URL_IMAGE_EDIT, COMMAND_TYPE_EDIT));
+	        } }, "Edit"),
 	    "Status : ",
 	    item.isActual ? ACTUAL : NOT_ACTUAL);
 	const MainMenu = () => React.createElement("div", null,
@@ -314,7 +333,7 @@
 	    React.createElement("button", { onClick: () => {
 	            let mes = this.input.value;
 	            this.input.value = '';
-	            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_PRINT, Command.PRINT));
+	            store.dispatch(sendCommandWS(mes, K.URL_PRINTER_PRINT, COMMAND_TYPE_PRINT));
 	        } }, "Print"));
 	const PrinterMenu = (items) => React.createElement("div", null,
 	    React.createElement("h2", null,
@@ -2991,6 +3010,7 @@
 	exports.CHANGE_ACTUALITY = 'CHANGE_ACTUALITY';
 	exports.CLEAR_SUBMODEL = 'CLEAR_SUBMODEL';
 	exports.REMOVE_ITEM = 'REMOVE_ITEM';
+	exports.UPDATE_ITEM = 'UPDATE_ITEM';
 	exports.SELECT_MENU = 'SELECT_MENU';
 	exports.IMAGE_MENU = 'IMAGE_MENU';
 	exports.PRINTER_MENU = 'PRINTER_MENU';
@@ -2998,6 +3018,7 @@
 	exports.SCAN_MENU = 'SCAN_MENU';
 	exports.IMAGE_SUBMODEL = 'IMAGE';
 	exports.PRINTER_SUBMODEL = 'PRINTER';
+	exports.URL_IMAGE_EDIT = 'ws://localhost:8000/Images/Edit';
 	exports.URL_IMAGE_UPDATE = 'ws://localhost:8000/Images/Update';
 	exports.URL_PRINTER_INFO = 'ws://localhost:8000/Printers/Info';
 	exports.URL_PRINTER_PRINT = 'ws://localhost:8000/Printers/Print';
