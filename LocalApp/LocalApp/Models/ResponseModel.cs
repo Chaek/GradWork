@@ -18,9 +18,9 @@ namespace WebSocketsClientServer.Models
 
         public static readonly string COMMAND_TYPE_NOTHING = "COMMAND_TYPE_NOTHING";
         public static readonly string COMMAND_TYPE_PRINT = "COMMAND_TYPE_PRINT";
-        public static readonly string COMMAND_TYPE_SCAN = "COMMAND_TYPE_PRINT";
-        public static readonly string COMMAND_TYPE_WAITING = "COMMAND_TYPE_PRINT";
-        public static readonly string COMMAND_TYPE_EDIT = "COMMAND_TYPE_PRINT";
+        public static readonly string COMMAND_TYPE_SCAN = "COMMAND_TYPE_SCAN";
+        public static readonly string COMMAND_TYPE_WAITING = "COMMAND_TYPE_WAITING";
+        public static readonly string COMMAND_TYPE_EDIT = "COMMAND_TYPE_EDIT";
 
         public static readonly string IMAGE_SUBMODEL = "IMAGE";
         public static readonly string PRINTER_SUBMODEL = "PRINTER";

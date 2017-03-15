@@ -17,7 +17,7 @@ namespace WebSocketsClientServer.Behaviors
             protected override void OnMessage(MessageEventArgs e)
             {
                 System.Object res = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Object>(e.Data);
-                AdvancedImage im = Newtonsoft.Json.JsonConvert.DeserializeObject<AdvancedImage>(res.ToString());
+                Image im = Newtonsoft.Json.JsonConvert.DeserializeObject<Image>(res.ToString());
 
                 var fileName = im.Name;
                 var dir = kFolderName + fileName;
@@ -33,15 +33,13 @@ namespace WebSocketsClientServer.Behaviors
                     string base64data = "";
                     ConvertHelper.ToBase64StringFromFile(dir, out base64data);
 
-                    AdvancedImage new_im = new AdvancedImage()
+                    Image new_im = new Image()
                     {
                         ID = im.ID,
                         Name = im.Name,
                         Data = "data:image/jpeg;base64," + base64data,
-                        Ref = im.Ref,
-                        isActual = im.isActual
                     };
-                    ResponseModel<AdvancedImage> response = new ResponseModel<AdvancedImage>
+                    ResponseModel<Image> response = new ResponseModel<Image>
                     {
                         mes = ResponseModel<Image>.COMMAND_STATUS_OK,
                         type = ResponseModel<Image>.IMAGE_SUBMODEL,

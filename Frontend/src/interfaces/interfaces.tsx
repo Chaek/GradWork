@@ -40,7 +40,6 @@ export interface PrinterInfoProps {
 export interface ModelS {
     picked?:number,
     isFetching: boolean,
-    isActual: boolean,
     items: string[]
     lastUpdated?: Date,
     Ref?:number
@@ -61,4 +60,20 @@ export interface SubmodelA extends Action {
 
 export interface Item {
     ref:number
+}
+
+export interface CommandS {
+    type:string,
+    status:string,
+    priority?:number
+}
+
+export interface CommandA extends Action {
+    comType:string,
+    status:string,
+    priority?:number
+}
+
+export interface MenuA extends Action {
+    menu:string
 }
