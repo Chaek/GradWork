@@ -9,15 +9,14 @@ using System.IO;
 
 namespace WebSocketsClientServer.Behaviors
 {
-    namespace Printers
+    static class Printers
     {
-        class Print : WebSocketBehavior
+        public class Print : WebSocketBehavior
         {
             static int counter = 0;
 
             protected override void OnMessage(MessageEventArgs e)
             {
-                Send("Wait");
                 var data = e.Data;
                 //string file = "../../../images/ordinary_cat.jpg";
                 //string name = Path.GetFileName(file);
@@ -42,7 +41,15 @@ namespace WebSocketsClientServer.Behaviors
                         
                     };
                     pd.EndPrint += (sender, ev) => {
-                        Send("Ok");
+                        ResponseModel<Printer> response = new ResponseModel<Printer>
+                        {
+                            mes = ResponseModel<Printer>.OK,
+                            type = ResponseModel<Printer>.PRINTER_SUBMODEL,
+                            data = { }
+                        };
+
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                        Send(json);
                     };
                     
                     pd.PrinterSettings.PrintToFile = true;
@@ -53,15 +60,23 @@ namespace WebSocketsClientServer.Behaviors
                     {
                         pd.Print();
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        Send("Failed");
+                        ResponseModel<Exception> response = new ResponseModel<Exception>
+                        {
+                            mes = ResponseModel<Printer>.ERROR,
+                            type = ResponseModel<Printer>.PRINTER_SUBMODEL,
+                            data = ex
+                        };
+
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                        Send(json);
                     }
                 }
             }
         }
 
-        class Info : WebSocketBehavior
+        public class Info : WebSocketBehavior
         {
             private IEnumerable<Printer> printers = null;
 
@@ -90,7 +105,7 @@ namespace WebSocketsClientServer.Behaviors
 
                 ResponseModel<IEnumerable<Printer>> res = new ResponseModel<IEnumerable<Printer>>
                 {
-                    mes = "All printers we have at the moment",
+                    mes = ResponseModel<Printer>.OK,
                     type = ResponseModel<Printer>.PRINTER_SUBMODEL,
                     data = printers,
                 };

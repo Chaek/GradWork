@@ -14,6 +14,20 @@ namespace BackendBridge.Controllers
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class ImageController : ApiController
     {
+        readonly ResponseModel<Image> successful = new ResponseModel<Image>
+        {
+            mes = ResponseModel<Image>.OK,
+            type = ResponseModel<Image>.IMAGE_SUBMODEL,
+            data = { },
+        };
+
+        ResponseModel<Exception> unsuccessful = new ResponseModel<Exception>
+        {
+            mes = ResponseModel<Image>.ERROR,
+            type = ResponseModel<Image>.IMAGE_SUBMODEL,
+            data = { },
+        };
+
         public IImageRepository repository;
         public ImageController(IImageRepository imageRepository)
         {
@@ -25,11 +39,10 @@ namespace BackendBridge.Controllers
         {
             ResponseModel<IEnumerable<Image> > res = new ResponseModel<IEnumerable<Image> >
             {
-                mes = "All images!",
+                mes = ResponseModel<Image>.OK,
                 type = ResponseModel<Image>.IMAGE_SUBMODEL,
                 data = repository.m_images,
             };
-
             return Ok(res);
         }
 
@@ -47,16 +60,25 @@ namespace BackendBridge.Controllers
                 {
                     repository.Add(im);
                 }
-            } catch
-            {
-                return Content(HttpStatusCode.BadRequest, "Something bad has happend");
             }
-            return Ok();
+            catch (Exception e)
+            {
+                unsuccessful.data = e;
+                return Content(HttpStatusCode.BadRequest, unsuccessful);
+            }
+            ResponseModel<Image> res = new ResponseModel<Image>
+            {
+                mes = ResponseModel<Image>.OK,
+                type = ResponseModel<Image>.IMAGE_SUBMODEL,
+                data = { },
+            };
+            return Ok(successful);
         }
 
         [System.Web.Http.HttpPost]
         public IHttpActionResult Post(Image image)
         {
+            UInt64 ID = 0;
             if (image == null)
             {
                 throw new ArgumentNullException("item");
@@ -65,13 +87,25 @@ namespace BackendBridge.Controllers
             //try catch
             try
             {
-                repository.Add(image);
+                ID = Convert.ToUInt32(repository.Add(image));
             }
-            catch
+            catch (Exception e)
             {
-                return Content(HttpStatusCode.BadRequest, "Something bad has happend");
+                unsuccessful.data = e;
+                return Content(HttpStatusCode.BadRequest, unsuccessful);
             }
-            return Ok();
+            ResponseModel<Image> res = new ResponseModel<Image>
+            {
+                mes = ResponseModel<Image>.OK,
+                type = ResponseModel<Image>.IMAGE_SUBMODEL,
+                data = new Image()
+                {
+                    ID = Convert.ToInt32(ID),
+                    Name = image.Name,
+                    Data = ""
+                },
+            };
+            return Ok(res);
         }
 
         [System.Web.Http.HttpDelete]
@@ -83,11 +117,13 @@ namespace BackendBridge.Controllers
             {
                 repository.Remove(image.ID);
             }
-            catch
+            catch (Exception e)
             {
-                return Content(HttpStatusCode.BadRequest, "Something bad has happend");
+                unsuccessful.data = e;
+                return Content(HttpStatusCode.BadRequest, unsuccessful);
             }
-            return Ok();
+            
+            return Ok(successful);
         }
     }
 }

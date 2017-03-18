@@ -55,7 +55,6 @@ namespace BackendBridge.Domain.Concrete
             {
                 context.Products.Remove(dbEntry);
                 context.SaveChanges();
-                System.Diagnostics.Debug.WriteLine(string.Format("Removed"));
             }
             return dbEntry;
         }

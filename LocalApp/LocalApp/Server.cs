@@ -3,6 +3,11 @@ using System.Diagnostics;
 using System.Management;
 using WebSocketsClientServer.Behaviors;
 using WebSocketSharp.Server;
+using WebSocketsClientServer.Abstract;
+using WebSocketsClientServer.Concrete;
+using System.Collections.Generic;
+using WebSocketsClientServer.Models;
+
 
 namespace WebSocketsClientServer
 {
@@ -11,23 +16,15 @@ namespace WebSocketsClientServer
     {
         static void Main(string[] args)
         {
-            /*
-            ProcessStartInfo startInfo = new ProcessStartInfo("C:/Users/ankar_000/Desktop/gradwork/LocalApp/images/ordinary_cat.jpg");
-            startInfo.Verb = "edit";
+            //Sychronize database records with local files
+            Images.Initialize();
 
-            Console.WriteLine("starting");
-            var i = 0;
-            Process editor = Process.Start(startInfo);
-            editor.Exited += (a, b) => { i = 1; };
-            */
-            
-
-            
             var wssv = new WebSocketServer("ws://localhost:8000");
-            wssv.AddWebSocketService<Behaviors.Printers.Info>("/Printers/Info");
-            wssv.AddWebSocketService<Behaviors.Images.Update>("/Images/Update");
-            wssv.AddWebSocketService<Behaviors.Images.Edit>("/Images/Edit");
-            wssv.AddWebSocketService<Behaviors.Printers.Print>("/Printers/Print");
+            wssv.AddWebSocketService<Printers.Info>("/Printers/Info");
+            wssv.AddWebSocketService<Images.Update>("/Images/Update");
+            wssv.AddWebSocketService<Images.Synchronize>("/Images/Synchronize");
+            wssv.AddWebSocketService<Images.Edit>("/Images/Edit");
+            wssv.AddWebSocketService<Printers.Print>("/Printers/Print");
             wssv.Start();
             
             Console.ReadKey(true);

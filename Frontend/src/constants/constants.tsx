@@ -25,8 +25,11 @@ export const PRINTER_SUBMODEL = 'PRINTER'
 
 export const URL_IMAGE_EDIT = 'ws://localhost:8000/Images/Edit'
 export const URL_IMAGE_UPDATE = 'ws://localhost:8000/Images/Update'
+export const URL_IMAGE_SEND_ID = 'ws://localhost:8000/Images/Synchronize'
+
 export const URL_PRINTER_INFO = 'ws://localhost:8000/Printers/Info'
 export const URL_PRINTER_PRINT = 'ws://localhost:8000/Printers/Print'
+
 export const COMMAND_STATUS_NOTHING = 'COMMAND_STATUS_NOTHING'
 export const COMMAND_STATUS_FAIL = 'COMMAND_STATUS_NOTHING'
 export const COMMAND_STATUS_OK = 'COMMAND_STATUS_OK'

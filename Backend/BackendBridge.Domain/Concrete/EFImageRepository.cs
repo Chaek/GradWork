@@ -17,8 +17,8 @@ namespace BackendBridge.Domain.Concrete
             get { return m_context.Images; }
         }
 
-        public void Add(Image image)
-        {    
+        public int Add(Image image)
+        {
             if (image.ID == 0)
             {
                 m_context.Images.Add(image);
@@ -35,6 +35,7 @@ namespace BackendBridge.Domain.Concrete
                 }
             }
             m_context.SaveChanges();
+            return image.ID;
         }
 
         public Image Get(int ID)

@@ -17,8 +17,8 @@ export interface Printer {
 
 export interface ResponseModel<T> {
     mes:string,
-    type:number,
-    data:T[]
+    type:string,
+    data:T
 }
 
 export interface AppProps {
@@ -46,13 +46,19 @@ export interface ModelS {
 }
 
 export interface ModelA extends Action {
-    model?:ResponseModel<any>,
+    model?:ResponseModel<any[]>,
     picked?:number,
     actuality?:boolean,
     Ref?:number,
     item?:any,
     ID?:number
     //submodel:string
+}
+
+export interface ImageRecord {
+    ImageID:number,
+    Name:string,
+    IsDirty:boolean
 }
 
 export interface SubmodelA extends Action {

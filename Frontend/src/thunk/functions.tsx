@@ -42,18 +42,33 @@ export function getModelsWS(mes:string, url:string) {
     }
 }
 
+export function sendImageID(ImageID:number, Name:string) {
+    let mes:I.ResponseModel<I.ImageRecord> = {
+        type:"Something",
+        mes:"Something",
+        data: {
+            ImageID,
+            Name,
+            IsDirty:false
+        }
+    }
+    return SingletonWS.getInstance().send(JSON.stringify(mes), K.URL_IMAGE_SEND_ID)
+}
+
 function returnFetch(dispatch:any, address:string, 
     header:any, action_ok:any, action_er?:any) {
     return fetch(address, header)
             .then(response => response.json())
-            .then(json => {
+            .then(json => { return new Promise((resolve, reject) => {
                 if ((json as any).mes == K.OK) {
                     dispatch(action_ok(json))
+                    resolve(json)
                 } else { 
                     console.log((json as any).data)
                     if (action_er !== undefined)
                         dispatch(action_er(json))
-                }
+                    reject(json)
+                }})
             })
 }
 
@@ -73,8 +88,11 @@ export function postItemBySubmodel(item:string, submodel:string, index:number) {
         let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_POST_ITEM
         let header = FETCH.CREATE_HEADER(FETCH.POST, true, item)
         let action_ok = (json:any) => { 
-            return { ID:json.data, Ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true } }
+            return { ID:json.data.ID, Ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true } }
         returnFetch(dispatch, address, header, action_ok)
+        //.then(json => console.log(json))
+        .then(json=>sendImageID((json as any).data.ID, (json as any).data.Name))
+        
     }
 }
 

@@ -11,7 +11,7 @@ namespace BackendBridge.Domain.Abstract
     {
         IEnumerable<Image> m_images { get; }
         Image Get(int ID);
-        void Add(Image picture);
+        int Add(Image picture);
         Image Remove(int ID);
     }
 }

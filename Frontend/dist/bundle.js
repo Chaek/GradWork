@@ -137,6 +137,7 @@
 	exports.PRINTER_SUBMODEL = 'PRINTER';
 	exports.URL_IMAGE_EDIT = 'ws://localhost:8000/Images/Edit';
 	exports.URL_IMAGE_UPDATE = 'ws://localhost:8000/Images/Update';
+	exports.URL_IMAGE_SEND_ID = 'ws://localhost:8000/Images/Synchronize';
 	exports.URL_PRINTER_INFO = 'ws://localhost:8000/Printers/Info';
 	exports.URL_PRINTER_PRINT = 'ws://localhost:8000/Printers/Print';
 	exports.COMMAND_STATUS_NOTHING = 'COMMAND_STATUS_NOTHING';
@@ -2501,18 +2502,35 @@
 	    };
 	}
 	exports.getModelsWS = getModelsWS;
+	function sendImageID(ImageID, Name) {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: {
+	            ImageID,
+	            Name,
+	            IsDirty: false
+	        }
+	    };
+	    return websocket_1.default.getInstance().send(JSON.stringify(mes), K.URL_IMAGE_SEND_ID);
+	}
+	exports.sendImageID = sendImageID;
 	function returnFetch(dispatch, address, header, action_ok, action_er) {
 	    return fetch(address, header)
 	        .then(response => response.json())
 	        .then(json => {
-	        if (json.mes == K.OK) {
-	            dispatch(action_ok(json));
-	        }
-	        else {
-	            console.log(json.data);
-	            if (action_er !== undefined)
-	                dispatch(action_er(json));
-	        }
+	        return new Promise((resolve, reject) => {
+	            if (json.mes == K.OK) {
+	                dispatch(action_ok(json));
+	                resolve(json);
+	            }
+	            else {
+	                console.log(json.data);
+	                if (action_er !== undefined)
+	                    dispatch(action_er(json));
+	                reject(json);
+	            }
+	        });
 	    });
 	}
 	function getAllItemsBySubmodel(submodel) {
@@ -2531,9 +2549,10 @@
 	        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_POST_ITEM;
 	        let header = FETCH.CREATE_HEADER(FETCH.POST, true, item);
 	        let action_ok = (json) => {
-	            return { ID: json.data, Ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true };
+	            return { ID: json.data.ID, Ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true };
 	        };
-	        returnFetch(dispatch, address, header, action_ok);
+	        returnFetch(dispatch, address, header, action_ok)
+	            .then(json => sendImageID(json.data.ID, json.data.Name));
 	    };
 	}
 	exports.postItemBySubmodel = postItemBySubmodel;

@@ -5,22 +5,85 @@ using WebSocketSharp.Server;
 using WebSocketsClientServer.Helpers;
 using System.IO;
 using System.Diagnostics;
+using WebSocketsClientServer.Concrete;
+using System.Linq;
 
 namespace WebSocketsClientServer.Behaviors
 {
-    namespace Images
+    static class Images
     {
+        //very bad! use a relevent path
+        static private readonly EFImageRecordsRepository repository = new EFImageRecordsRepository();
+        static private readonly string kFolderName = "C:/Users/ankar_000/Desktop/gradwork/LocalApp/images/";
+        static public void Initialize()
+        {
+            IEnumerable<string> imageNames =
+                    Directory.GetFiles(kFolderName, "*.jpg", SearchOption.TopDirectoryOnly)
+                    .Select(path => Path.GetFileName(path)).ToList();
+
+            List<ImageRecord> records_to_add = new List<ImageRecord>();   
+            foreach (var name in imageNames)
+            {
+                ImageRecord record = repository.Find(name);
+                if (record == null)
+                {
+                    ImageRecord record_to_add = new ImageRecord()
+                    {
+                        ImageID = 0,
+                        Name = name,
+                        IsDirty = true
+                    };
+                    repository.Add(record);
+                }
+            }
+
+            List<string> names_to_delete = new List<string>();
+            IEnumerable<ImageRecord> records = repository.records;
+            foreach (var record in records)
+            {
+                if (default(string) == imageNames.FirstOrDefault(name => name == record.Name))
+                {
+                    names_to_delete.Add(record.Name);   
+                }
+            }
+
+            foreach(var name in names_to_delete)
+            {
+                repository.Remove(name);
+            }
+        }
+
+        public class Synchronize : WebSocketBehavior
+        {
+            protected override void OnMessage(MessageEventArgs e)
+            {
+                System.Object res = Newtonsoft.Json.JsonConvert
+                    .DeserializeObject<System.Object>(e.Data);
+                ResponseModel<ImageRecord> response = Newtonsoft.Json.JsonConvert
+                    .DeserializeObject<ResponseModel<ImageRecord>>(res.ToString());
+
+                ImageRecord record = response.data;
+                repository.Add(record);
+                ResponseModel<Image> successfull = new ResponseModel<Image>
+                {
+                    mes = ResponseModel<Image>.OK,
+                    type = ResponseModel<Image>.IMAGE_SUBMODEL,
+                    data = { }
+                };
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(successfull);
+                Send(json);
+            }
+        }
+
         public class Edit : WebSocketBehavior
         {
-            //very bad use relevent path
-            public readonly string kFolderName = "C:/Users/ankar_000/Desktop/gradwork/LocalApp/images/";
             protected override void OnMessage(MessageEventArgs e)
             {
                 System.Object res = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Object>(e.Data);
                 Image im = Newtonsoft.Json.JsonConvert.DeserializeObject<Image>(res.ToString());
 
                 var fileName = im.Name;
-                var dir = kFolderName + fileName;
+                var dir = Images.kFolderName + fileName;
                 ProcessStartInfo startInfo = new ProcessStartInfo(dir);
                 //startInfo.EnableRaisingEvents = true;
                 //startInfo.WorkingDirectory = curDirectory;
@@ -28,7 +91,8 @@ namespace WebSocketsClientServer.Behaviors
                 Process editor = Process.Start(startInfo);
                 editor.EnableRaisingEvents = true;
 
-                editor.Exited += (a, b) => {
+                editor.Exited += (a, b) =>
+                {
 
                     string base64data = "";
                     ConvertHelper.ToBase64StringFromFile(dir, out base64data);
@@ -47,9 +111,9 @@ namespace WebSocketsClientServer.Behaviors
                     };
 
                     var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-                    /*CHECK FOR CHANGES*/
-                    //NOW image is returned anyway no matter has it been edited or hasn't
-                    Send(json);
+                        /*CHECK FOR CHANGES*/
+                        //NOW image is returned anyway no matter has it been edited or hasn't
+                        Send(json);
                 };
             }
         }
@@ -71,11 +135,13 @@ namespace WebSocketsClientServer.Behaviors
 
                 foreach (var path in imagesPaths)
                 {
+                    var name = Path.GetFileName(path);
+                    ImageRecord record = repository.Find(name);
                     ConvertHelper.ToBase64StringFromFile(path, out base64data);
                     Image image = new Image
                     {
-                        ID = 0, //DataBase'll initialize it
-                        Name = Path.GetFileName(path),
+                        ID = (record == null)? 0 : record.ImageID,
+                        Name = name,
                         Data = "data:image/jpeg;base64," + base64data
                     };
 
@@ -90,7 +156,7 @@ namespace WebSocketsClientServer.Behaviors
 
                 ResponseModel<IEnumerable<Image>> res = new ResponseModel<IEnumerable<Image>>
                 {
-                    mes = "Files from the directory 'images'!",
+                    mes = ResponseModel<Image>.OK,
                     type = ResponseModel<Image>.IMAGE_SUBMODEL,
                     data = images,
                 };
