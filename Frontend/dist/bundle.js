@@ -150,6 +150,7 @@
 	exports.COMMAND_TYPE_EDIT = 'COMMAND_TYPE_EDIT';
 	exports.ACTUAL = 'ACTUAL';
 	exports.NOT_ACTUAL = 'NOT ACTUAL';
+	exports.OK = 'OK';
 	exports.START_MODEL = {
 	    isFetching: false,
 	    items: []
@@ -194,8 +195,9 @@
 	        case K.REMOVE_ITEM:
 	            return [...state.slice(0, i), ...state.slice(i + 1)];
 	        case K.CHANGE_ACTUALITY:
+	            let new_item = Object.assign({}, state[i].item, { ID: action.ID });
 	            return [...state.slice(0, i),
-	                Object.assign({}, state[i], { isActual: action.actuality }),
+	                Object.assign({}, state[i], { item: new_item, isActual: action.actuality }),
 	                ...state.slice(i + 1)];
 	        //Object.assign({}, state, {isActual:action.actuality}) : state 
 	        case K.RECEIVE_MODEL_REMOTE:
@@ -2397,17 +2399,15 @@
 	const reducers_1 = __webpack_require__(4);
 	const T = __webpack_require__(35);
 	exports.ToMainMenuButton = () => React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.MAIN_MENU }) }, "Back");
-	exports.UpdateModelPanel = (item) => React.createElement("div", null,
-	    React.createElement("button", { onClick: () => {
-	            reducers_1.store.dispatch(T.postModels(JSON.stringify(item.item), K.IMAGE_SUBMODEL, item.Ref));
-	        } }, "Update"),
-	    React.createElement("button", { onClick: () => { reducers_1.store.dispatch(T.removeModel(JSON.stringify(item.item), K.IMAGE_SUBMODEL, item.Ref)); } }, "Delete"),
+	exports.UpdateItemPanel = (data) => React.createElement("div", null,
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.postItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref)) }, "Update"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.removeItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref)) }, "Delete"),
 	    React.createElement("button", { onClick: () => {
 	            //bad
-	            reducers_1.store.dispatch(T.sendCommandWS(item, K.URL_IMAGE_EDIT, K.COMMAND_TYPE_EDIT));
+	            reducers_1.store.dispatch(T.sendCommandWS(data, K.URL_IMAGE_EDIT, K.COMMAND_TYPE_EDIT));
 	        } }, "Edit"),
 	    "Status : ",
-	    item.isActual ? K.ACTUAL : K.NOT_ACTUAL);
+	    data.isActual ? K.ACTUAL : K.NOT_ACTUAL);
 	exports.MainMenu = () => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Main menu")),
@@ -2418,12 +2418,12 @@
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Image Menu")),
 	    React.createElement(exports.ToMainMenuButton, null),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.getModels(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.getAllItemsBySubmodel(K.IMAGE_SUBMODEL)) }, "Update from remote app"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.getModelsWS("Give me it", K.URL_IMAGE_UPDATE)) }, "Update from local app"),
 	    React.createElement("br", null),
 	    items.map((v, i) => React.createElement("div", null,
 	        React.createElement("img", { src: v.item.Data }),
-	        exports.UpdateModelPanel(v))));
+	        exports.UpdateItemPanel(v))));
 	exports.PrinterInfo = (item) => React.createElement("div", null,
 	    React.createElement("h3", null,
 	        React.createElement("p", null, "Printer Info : ")),
@@ -2464,6 +2464,7 @@
 	const K = __webpack_require__(3);
 	const websocket_1 = __webpack_require__(38);
 	const reducers_1 = __webpack_require__(4);
+	const FETCH = __webpack_require__(39);
 	function analyzeMessage(mes, Ref) {
 	    let data = JSON.parse(mes);
 	    let submodel = "";
@@ -2474,7 +2475,6 @@
 	                case K.COMMAND_STATUS_WAITING:
 	                    break;
 	                case K.COMMAND_STATUS_OK:
-	                    console.log("dsadsa");
 	                    reducers_1.store.dispatch({ Ref, submodel: data.type, type: K.UPDATE_ITEM, item: data.data });
 	                    break;
 	                default:
@@ -2501,55 +2501,52 @@
 	    };
 	}
 	exports.getModelsWS = getModelsWS;
-	function getModels(submodel) {
+	function returnFetch(dispatch, address, header, action_ok, action_er) {
+	    return fetch(address, header)
+	        .then(response => response.json())
+	        .then(json => {
+	        if (json.mes == K.OK) {
+	            dispatch(action_ok(json));
+	        }
+	        else {
+	            console.log(json.data);
+	            if (action_er !== undefined)
+	                dispatch(action_er(json));
+	        }
+	    });
+	}
+	function getAllItemsBySubmodel(submodel) {
 	    return function (dispatch) {
 	        dispatch({ type: K.REQUEST_MODEL });
-	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
-	            .then(response => response.json())
-	            .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL_REMOTE, model: json }))
-	            .catch(() => { });
+	        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_GET_ALL;
+	        let header = FETCH.CREATE_HEADER(FETCH.GET, true);
+	        let action_ok = (json) => { return { submodel, type: K.RECEIVE_MODEL_REMOTE, model: json }; };
+	        returnFetch(dispatch, address, header, action_ok);
 	    };
 	}
-	exports.getModels = getModels;
-	function postModels(model, submodel, index) {
+	exports.getAllItemsBySubmodel = getAllItemsBySubmodel;
+	function postItemBySubmodel(item, submodel, index) {
 	    return function (dispatch) {
 	        dispatch({ type: K.REQUEST_MODEL });
-	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/post`, {
-	            method: 'post',
-	            headers: {
-	                'Accept': 'application/json, text/plain, */*',
-	                'Content-Type': 'application/json'
-	            },
-	            body: model
-	        })
-	            .then(res => {
-	            if (res.ok)
-	                dispatch({ Ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true });
-	            else
-	                console.log("error");
-	        });
+	        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_POST_ITEM;
+	        let header = FETCH.CREATE_HEADER(FETCH.POST, true, item);
+	        let action_ok = (json) => {
+	            return { ID: json.data, Ref: index, submodel, type: K.CHANGE_ACTUALITY, actuality: true };
+	        };
+	        returnFetch(dispatch, address, header, action_ok);
 	    };
 	}
-	exports.postModels = postModels;
-	//should be deleted by id but there are were some proplems
-	function removeModel(model, submodel, index) {
+	exports.postItemBySubmodel = postItemBySubmodel;
+	function removeItemBySubmodel(item, submodel, index) {
 	    return function (dispatch) {
-	        //dispatch({ type: K.REQUEST_MODEL })
-	        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/remove`, {
-	            method: 'delete',
-	            headers: {
-	                'Accept': 'application/json, text/plain, */*',
-	                'Content-Type': 'application/json'
-	            },
-	            body: model
-	        })
-	            .then(res => {
-	            if (res.ok)
-	                dispatch({ Ref: index, submodel, type: K.REMOVE_ITEM });
-	        });
+	        dispatch({ type: K.REQUEST_MODEL });
+	        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_REMOVE_ITEM;
+	        let header = FETCH.CREATE_HEADER(FETCH.DELETE, true, item);
+	        let action_ok = (json) => { return { Ref: index, submodel, type: K.REMOVE_ITEM }; };
+	        returnFetch(dispatch, address, header, action_ok);
 	    };
 	}
-	exports.removeModel = removeModel;
+	exports.removeItemBySubmodel = removeItemBySubmodel;
 
 
 /***/ },
@@ -3078,6 +3075,40 @@
 	SingletonWS.ws = null;
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = SingletonWS;
+
+
+/***/ },
+/* 39 */
+/***/ function(module, exports) {
+
+	"use strict";
+	exports.POST = 'post';
+	exports.DELETE = 'delete';
+	exports.GET = 'get';
+	const CORS_ENABLED = "cors";
+	const CORS_UNABLED = "no-cors";
+	//export const WEBSERVER_ADRESS = 'http://localhost:25541/api/'
+	exports.WEBSERVER_ADRESS = 'http://ankarenko-bridge.azurewebsites.net/api/';
+	exports.METHOD_GET_ALL = '/all';
+	exports.METHOD_POST_ITEM = '/post';
+	exports.METHOD_REMOVE_ITEM = '/remove';
+	function CONTROLLER_NAME(submodel) {
+	    return submodel.toLowerCase();
+	}
+	exports.CONTROLLER_NAME = CONTROLLER_NAME;
+	function CREATE_HEADER(method, cors, model) {
+	    let kernel = {
+	        method: method,
+	        mode: cors ? CORS_ENABLED : CORS_UNABLED,
+	        headers: {
+	            'Accept': 'application/json, text/plain, */*',
+	            'Content-Type': 'application/json'
+	        },
+	    };
+	    return (model !== undefined) ?
+	        Object.assign({}, kernel, { body: model }) : kernel;
+	}
+	exports.CREATE_HEADER = CREATE_HEADER;
 
 
 /***/ }

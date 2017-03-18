@@ -10,22 +10,23 @@ export const ToMainMenuButton = () =>
     Back
     </button>
 
-export const UpdateModelPanel = (item:any) =>
+export const UpdateItemPanel = (data:any) =>
     <div>
-        <button onClick={()=>{
-            store.dispatch(T.postModels(JSON.stringify(item.item), K.IMAGE_SUBMODEL, item.Ref))}}>
+        <button onClick={()=>
+            store.dispatch(T.postItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref))}>
             Update
         </button>
-        <button onClick={()=>{store.dispatch(T.removeModel(JSON.stringify(item.item), K.IMAGE_SUBMODEL, item.Ref))}}>
+        <button onClick={()=>
+            store.dispatch(T.removeItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref))}>
             Delete
         </button>
         <button onClick={()=>{
             //bad
-            store.dispatch(T.sendCommandWS(item, 
+            store.dispatch(T.sendCommandWS(data, 
             K.URL_IMAGE_EDIT, K.COMMAND_TYPE_EDIT))}}>
             Edit
         </button>
-        Status : {item.isActual? K.ACTUAL : K.NOT_ACTUAL}
+        Status : {data.isActual? K.ACTUAL : K.NOT_ACTUAL}
     </div>
 
 export const MainMenu = () =>
@@ -53,8 +54,8 @@ export const ImageMenu = (items:any[]) =>
         <h2><p>Image Menu</p></h2>
         <ToMainMenuButton/>
             
-        <button onClick = {() =>  
-                store.dispatch(T.getModels(K.IMAGE_SUBMODEL))}>
+        <button onClick = {() => 
+        store.dispatch(T.getAllItemsBySubmodel(K.IMAGE_SUBMODEL))}>
         Update from remote app
         </button>
             
@@ -66,7 +67,7 @@ export const ImageMenu = (items:any[]) =>
         {items.map((v, i)=>
             <div>
             <img src = {v.item.Data}/>
-            {UpdateModelPanel(v)}
+            {UpdateItemPanel(v)}
             </div> )
         }
     </div>

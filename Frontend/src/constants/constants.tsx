@@ -41,6 +41,8 @@ export const COMMAND_TYPE_EDIT = 'COMMAND_TYPE_EDIT'
 export const ACTUAL = 'ACTUAL'
 export const NOT_ACTUAL = 'NOT ACTUAL'
 
+export const OK = 'OK'
+
 
 export const START_MODEL:I.ModelS = {
     isFetching: false,

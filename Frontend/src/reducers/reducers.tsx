@@ -8,7 +8,7 @@ import thunkMiddleware from 'redux-thunk';
 
 
 function items(state:any[], action:I.ModelA) {
-    let i = state.findIndex(v=>action.Ref==v.Ref)
+    let i = state.findIndex(v=>action.Ref == v.Ref)
     ///if (i == -1)
     switch (action.type) {
         case K.UPDATE_ITEM:
@@ -18,8 +18,9 @@ function items(state:any[], action:I.ModelA) {
         case K.REMOVE_ITEM:
             return [...state.slice(0, i), ...state.slice(i+1)]
         case K.CHANGE_ACTUALITY:
+            let new_item = Object.assign({}, state[i].item, {ID:action.ID})
             return [...state.slice(0, i), 
-                    Object.assign({}, state[i], {isActual:action.actuality}),
+                    Object.assign({}, state[i], {item:new_item, isActual:action.actuality}),
                     ...state.slice(i+1)]
                 //Object.assign({}, state, {isActual:action.actuality}) : state 
         case K.RECEIVE_MODEL_REMOTE:

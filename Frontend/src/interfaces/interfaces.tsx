@@ -50,7 +50,8 @@ export interface ModelA extends Action {
     picked?:number,
     actuality?:boolean,
     Ref?:number,
-    item?:any
+    item?:any,
+    ID?:number
     //submodel:string
 }
 

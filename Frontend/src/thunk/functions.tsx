@@ -3,6 +3,7 @@ import * as I from '../interfaces/interfaces'
 import * as K from '../constants/constants'
 import SingletonWS from '../helpers/websocket'
 import {store} from '../reducers/reducers'
+import * as FETCH from '../helpers/fetchhelper'
 
 function analyzeMessage(mes:any, Ref?:number) {
     let data:any = JSON.parse(mes)
@@ -14,7 +15,6 @@ function analyzeMessage(mes:any, Ref?:number) {
                 case K.COMMAND_STATUS_WAITING:
                     break
                 case K.COMMAND_STATUS_OK:
-                console.log("dsadsa")
                     store.dispatch({Ref, submodel:data.type, type: K.UPDATE_ITEM, item:data.data})
                     break
                 default:
@@ -42,53 +42,48 @@ export function getModelsWS(mes:string, url:string) {
     }
 }
 
-export function getModels(submodel:string) {
+function returnFetch(dispatch:any, address:string, 
+    header:any, action_ok:any, action_er?:any) {
+    return fetch(address, header)
+            .then(response => response.json())
+            .then(json => {
+                if ((json as any).mes == K.OK) {
+                    dispatch(action_ok(json))
+                } else { 
+                    console.log((json as any).data)
+                    if (action_er !== undefined)
+                        dispatch(action_er(json))
+                }
+            })
+}
+
+export function getAllItemsBySubmodel(submodel:string) {
     return function(dispatch:any) { 
         dispatch({ type: K.REQUEST_MODEL })
-        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/all`)
-               .then(response => response.json())
-               //why can't assign to ResponseModel<Image>?
-               .then(json => dispatch({ submodel, type: K.RECEIVE_MODEL_REMOTE, model: json }))
-               .catch(() => {})
+        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_GET_ALL
+        let header = FETCH.CREATE_HEADER(FETCH.GET, true)
+        let action_ok = (json:any) => { return { submodel, type: K.RECEIVE_MODEL_REMOTE, model: json } }
+        returnFetch(dispatch, address, header, action_ok)
     }
 }
 
-
-export function postModels(model:string, submodel:string, index:number) {
+export function postItemBySubmodel(item:string, submodel:string, index:number) {
     return function(dispatch:any) { 
         dispatch({ type: K.REQUEST_MODEL })
-        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/post`,
-            {
-                method: 'post',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                },
-                body:model
-            })
-            //why can't assign to ResponseModel<Image>?
-            .then(res => {
-                if (res.ok) dispatch({ Ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true })
-                else console.log("error")
-            })
+        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_POST_ITEM
+        let header = FETCH.CREATE_HEADER(FETCH.POST, true, item)
+        let action_ok = (json:any) => { 
+            return { ID:json.data, Ref:index, submodel, type: K.CHANGE_ACTUALITY, actuality: true } }
+        returnFetch(dispatch, address, header, action_ok)
     }
 }
 
-//should be deleted by id but there are were some proplems
-export function removeModel(model:string, submodel:string, index:number) {
+export function removeItemBySubmodel(item:string, submodel:string, index:number) {
     return function(dispatch:any) { 
-        //dispatch({ type: K.REQUEST_MODEL })
-        return fetch(`http://ankarenko-bridge.azurewebsites.net/api/${submodel.toLowerCase()}/remove`,
-            {
-                method: 'delete',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                },
-                body:model
-            })
-            //why can't assign to ResponseModel<Image>?
-            .then(res => { if (res.ok) dispatch({Ref:index, submodel, type: K.REMOVE_ITEM})
-            })
+        dispatch({ type: K.REQUEST_MODEL })
+        let address = FETCH.WEBSERVER_ADRESS + FETCH.CONTROLLER_NAME(submodel) + FETCH.METHOD_REMOVE_ITEM
+        let header = FETCH.CREATE_HEADER(FETCH.DELETE, true, item)
+        let action_ok = (json:any) => { return { Ref:index, submodel, type: K.REMOVE_ITEM } }
+        returnFetch(dispatch, address, header, action_ok)
     }
 }
