@@ -1,4 +1,17 @@
-export default class SingletonWS {
+import * as K from '../constants/constants'
+
+//CONTROLLERS
+export const IMAGE_CONTROLLER = 'Images'
+
+//ADDRESSES
+export const LOCAL_APP_ADRESS = 'ws://localhost:8000/'
+
+//METHODS
+export const METHOD_GET_ALL = '/Update'
+export const METHOD_EDIT = '/Edit'
+
+export class SingletonWS {
+    
     private static instance:SingletonWS
     private static ws:WebSocket = null
 
@@ -48,8 +61,14 @@ export default class SingletonWS {
         return new Promise((resolve, reject)=>{
             this.connect(url)
             .then(()=>this.sendWS(mes))
-            .then(response=>resolve((response as any).data))
-            .catch(err=>reject(err))
+            .then(response=>{
+                let res = JSON.parse((response as any).data)
+                if ((res as any).mes == K.OK) {
+                    resolve(res)
+                } else {
+                    reject(res)
+                }
+            })
         }) 
     }
 }

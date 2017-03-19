@@ -11,8 +11,6 @@ namespace BackendBridge.Domain.Concrete
     public class EFDbContext : DbContext
     {
         public DbSet<Image> Images { get; set; }
-        public DbSet<Product> Products { get; set; }
-        
     }
 
 }

@@ -8,9 +8,9 @@ namespace WebSocketsClientServer.Models
 {
     public class Image
     {
-        public int ID { get; set; }
-        public string Name { get; set; }
-        public string Data { get; set; }
+        public int id { get; set; }
+        public String name { get; set; }
+        public String data { get; set; }
 
     }
 }

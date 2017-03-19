@@ -11,6 +11,7 @@ namespace BackendBridge.Models
     //some constraints on T should be added
     public class ResponseModel<T>
     {
+        public static readonly string IMAGE_RECORD_SUBMODEL = "IMAGE_RECORD";
         public static readonly string IMAGE_SUBMODEL = "IMAGE";
         public static readonly string PRINTER_SUBMODEL = "PRINTER";
         public static readonly string PRODUCT_SUBMODEL = "PRODUCT";

@@ -19,9 +19,13 @@ export const IMAGE_MENU = 'IMAGE_MENU'
 export const PRINTER_MENU = 'PRINTER_MENU'
 export const MAIN_MENU = 'MAIN_MENU'
 export const SCAN_MENU = 'SCAN_MENU'
+export const IMAGE_REMOTE_MENU = 'IMAGE_REMOTE_MENU'
+export const IMAGE_LOCAL_MENU = 'IMAGE_LOCAL_MENU'
 
 export const IMAGE_SUBMODEL = 'IMAGE'
 export const PRINTER_SUBMODEL = 'PRINTER'
+
+
 
 export const URL_IMAGE_EDIT = 'ws://localhost:8000/Images/Edit'
 export const URL_IMAGE_UPDATE = 'ws://localhost:8000/Images/Update'
@@ -71,3 +75,13 @@ export const mes:any = {
     mes:'hello',
     sender:'frontend'
 }
+
+//REDUCER CONSTANTS
+export const RECIEVE = 'RECIEVE'
+export const REQUEST = 'REQUEST'
+export const REMOVE = 'REMOVE'
+export const ADD = 'ADD'
+
+
+export const REMOTE_IMAGE = 'REMOTE_IMAGE'
+export const LOCAL_IMAGE = 'LOCAL_IMAGE'

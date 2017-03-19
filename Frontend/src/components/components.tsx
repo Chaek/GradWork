@@ -10,6 +10,7 @@ export const ToMainMenuButton = () =>
     Back
     </button>
 
+/*
 export const UpdateItemPanel = (data:any) =>
     <div>
         <button onClick={()=>
@@ -28,49 +29,98 @@ export const UpdateItemPanel = (data:any) =>
         </button>
         Status : {data.isActual? K.ACTUAL : K.NOT_ACTUAL}
     </div>
+*/
+
+export const ImageToolLocal = (record:any) =>
+    <div>
+        <button onClick={()=>
+            store.dispatch(T.POST_IMAGE_REMOTE(record))}>
+            Push
+        </button>
+        <button onClick={()=>store.dispatch({imageType:K.LOCAL_IMAGE, type:K.REMOVE, name:record.name})}>
+            Delete
+        </button>
+        <button onClick={()=>store.dispatch(T.EDIT_ON_LOCAL(record))}>
+            Edit
+        </button>
+    </div>
+
+export const ImageToolRemote = (record:any) =>
+    <div>
+        <button onClick={()=>
+            store.dispatch(T.POST_IMAGE_REMOTE(record))}>
+            Pull
+        </button>
+        <button onClick={()=>store.dispatch(T.REMOVE_IMAGE_REMOTE(record))}>
+            Delete
+        </button>
+    </div>
+
 
 export const MainMenu = () =>
     <div>
         <h2><p>Main menu</p></h2>
-               
+    
         <button onClick = {()=>
                 store.dispatch({type:K.SELECT_MENU, menu:K.PRINTER_MENU})}>
         Printer menu
-        </button>
-                
-        <button onClick = {()=>
-                store.dispatch({type:K.SELECT_MENU, menu:K.IMAGE_MENU})}>
-        Image menu
         </button>
 
         <button onClick = {()=>
                 store.dispatch({type:K.SELECT_MENU, menu:K.SCAN_MENU})}>
         Scan menu
         </button>
+
+        <button onClick = {()=>
+                store.dispatch({type:K.SELECT_MENU, menu:K.IMAGE_REMOTE_MENU})}>
+        Image Records Remote Menu
+        </button>
+
+        <button onClick = {()=>
+                store.dispatch({type:K.SELECT_MENU, menu:K.IMAGE_LOCAL_MENU})}>
+        Image Records Local Menu
+        </button>
     </div>
 
-export const ImageMenu = (items:any[]) =>
+export const ImageRemoteMenu = (records:any[]) => 
     <div>
-        <h2><p>Image Menu</p></h2>
+        <h2><p>Image Remote Menu</p></h2>
         <ToMainMenuButton/>
-            
+
         <button onClick = {() => 
-        store.dispatch(T.getAllItemsBySubmodel(K.IMAGE_SUBMODEL))}>
-        Update from remote app
+        store.dispatch(T.GET_IMAGE_RECORDS_REMOTE())}>
+        Update from Remote
         </button>
             
-        <button onClick = {()=>
-                store.dispatch(T.getModelsWS("Give me it", K.URL_IMAGE_UPDATE))}>
-        Update from local app
-        </button>
         <br/>
-        {items.map((v, i)=>
+        {records.map(r=>
             <div>
-            <img src = {v.item.Data}/>
-            {UpdateItemPanel(v)}
-            </div> )
+            <img key={r.name} src = {r.data}/>
+            {ImageToolRemote(r)}
+            </div>
+            )
         }
     </div>
+
+export const ImageLocalMenu = (records:any[]) => 
+    <div>
+        <h2><p>Image Local Menu</p></h2>
+        <ToMainMenuButton/>
+
+        <button onClick = {() => 
+        store.dispatch(T.GET_IMAGE_RECORDS_LOCAL())}>
+        Update from local
+        </button>
+            
+        <br/>
+        {records.map(r=>
+            <div>
+            <img key={r.name} src = {r.data}/>
+            {ImageToolLocal(r)}
+            </div>
+        )}
+    </div>
+
 
 export const PrinterInfo = (item:any) =>
     <div>
@@ -85,7 +135,8 @@ export const PrinterInfo = (item:any) =>
         Print
         </button>
     </div>
-        
+
+   /*     
 export const PrinterMenu = (items:any[]) =>
     <div>
         <h2><p>Printer Menu</p></h2>
@@ -95,7 +146,7 @@ export const PrinterMenu = (items:any[]) =>
             submodel:K.PRINTER_SUBMODEL,
             picked:e.target.selectedIndex
         })}>
-            {items.map(m=><option>{m.item.Name}</option>)}
+            {items.map(m=><option>{m.item.name}</option>)}
         </select>
 
         <br/>
@@ -108,7 +159,7 @@ export const PrinterMenu = (items:any[]) =>
         </button>
         <br/>      
     </div>
-
+*/
 export const ScanMenu = (/*items:any[]*/) =>
     <div>
         <h2><p>Scan Menu</p></h2>

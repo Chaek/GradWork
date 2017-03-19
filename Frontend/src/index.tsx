@@ -9,10 +9,18 @@ import * as createLogger from 'redux-logger';
 import { createStore, applyMiddleware } from 'redux';
 import * as I from './interfaces/interfaces'
 import * as K from './constants/constants'
-import SingletonWS from './helpers/websocket'
 import {store} from './reducers/reducers'
 import * as T from './thunk/functions'
 import * as C from './components/components'
+import RUN_ALL_TESTS from './tests/tests'
+
+
+RUN_ALL_TESTS()
+
+
+
+
+
 
 
 //bad because it would get updated even if it's unnessessary
@@ -26,6 +34,9 @@ class Main extends React.Component<any, any> {
         let i = undefined
         let status:string = ''
 
+        let remotes = []
+        let records = []
+
         switch (menu) {    
             case K.PRINTER_MENU:
                 items = state.modelsBySubmodel[K.PRINTER_SUBMODEL].items
@@ -35,17 +46,21 @@ class Main extends React.Component<any, any> {
                 //console.log(items[i])
                 return (
                     <div> 
-                        {C.PrinterMenu (items)}
-                        <C.PrinterInfo {...item}/>
+                        
                     </div>)
-            case K.IMAGE_MENU:
-                items = state.modelsBySubmodel[K.IMAGE_SUBMODEL].items
-                    //bad
-                return <div>{C.ImageMenu(items)}</div>
             case K.MAIN_MENU:
                 return <C.MainMenu/>
             case K.SCAN_MENU:
                 return <C.ScanMenu/>
+            case K.IMAGE_LOCAL_MENU:
+                remotes = state.imageManager[K.LOCAL_IMAGE]
+                records = (remotes !== undefined)? remotes.records : []
+                return <div>{C.ImageLocalMenu(records)}</div>
+                
+            case K.IMAGE_REMOTE_MENU:
+                remotes = state.imageManager[K.REMOTE_IMAGE]
+                records = (remotes !== undefined)? remotes.records : []
+                return <div>{C.ImageRemoteMenu(records)}</div>
             default:
                 return <C.MainMenu/>
         }
@@ -59,5 +74,4 @@ function render() {
 
 store.subscribe(render)
 render()
-
 

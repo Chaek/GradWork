@@ -9,9 +9,10 @@ namespace BackendBridge.Domain.Abstract
 {
     public interface IImageRepository
     {
+
         IEnumerable<Image> m_images { get; }
-        Image Get(int ID);
-        int Add(Image picture);
-        Image Remove(int ID);
+        Image Get(String name);
+        void Add(Image image);
+        Image Remove(String name);
     }
 }

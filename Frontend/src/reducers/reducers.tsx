@@ -2,10 +2,11 @@ import * as createLogger from 'redux-logger';
 import { combineReducers, createStore, applyMiddleware } from 'redux';
 import * as I from '../interfaces/interfaces'
 import * as K from '../constants/constants'
-import SingletonWS from '../helpers/websocket'
 import thunkMiddleware from 'redux-thunk';
+import * as deepFreeze from 'deep-freeze';
+import * as expect from 'expect';
 
-
+const NOT_FOUND = -1
 
 function items(state:any[], action:I.ModelA) {
     let i = state.findIndex(v=>action.Ref == v.Ref)
@@ -82,6 +83,10 @@ function commandInfo(state:I.CommandS = K.START_COMMANDS, action:I.CommandA) {
     }
 }
 
+
+
+
+
 function modelsBySubmodel(state:any = 
     {
         [K.IMAGE_SUBMODEL]:K.START_MODEL, 
@@ -109,7 +114,8 @@ const loggerMiddleware = createLogger()
 const reducer = combineReducers({
     selectedMenu,
     commandInfo,
-    modelsBySubmodel    
+    modelsBySubmodel, 
+    imageManager
 })
 
 export const store = createStore(
@@ -119,3 +125,61 @@ export const store = createStore(
     loggerMiddleware // neat middleware that logs actions
   )
 )
+
+
+export function reduceRecords(state:any[], action:any) {
+    let i = NOT_FOUND
+    switch (action.type) {
+        case K.RECIEVE:
+            return action.records
+        case K.REMOVE:
+            i = state.findIndex(r=>r.name == action.name)
+            return (i == NOT_FOUND)? 
+                state : [...state.slice(0, i), ...state.slice(i+1)]
+        case K.ADD:
+            i = state.findIndex(r => r.name == action.record.name)
+            return (i == NOT_FOUND)?
+                [...state, action.record] : 
+                [...state.slice(0, i), action.record, ...state.slice(i+1)]
+        default:
+            return state;
+    }
+}
+
+export function imageRecordRemote(state:any = {records:[], isRequesting:false}, action:any) {
+    switch (action.type) {
+        case K.RECIEVE:
+            return {
+                isRequesting:false, 
+                records: reduceRecords(state.records, action)
+            }
+        case K.REQUEST:
+            return {
+                ...state,
+                isRequesting:true
+            } 
+        case K.REMOVE:
+        case K.ADD:
+            return {
+                ...state,
+                records: reduceRecords(state.records, action)
+            }
+        default:
+            return state;
+    }
+}
+
+export function imageManager(state:any = {}, action:any) {
+    switch (action.type) {
+        case K.RECIEVE:
+        case K.REQUEST:
+        case K.REMOVE:
+        case K.ADD:
+            return {
+                ...state,
+                [action.imageType]: imageRecordRemote(state[action.imageType], action)
+            }
+        default:
+            return state
+    }
+}

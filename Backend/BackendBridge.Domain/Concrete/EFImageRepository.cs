@@ -14,43 +14,38 @@ namespace BackendBridge.Domain.Concrete
 
         public IEnumerable<Image> m_images
         {
-            get { return m_context.Images; }
+            get
+            {
+                return m_context.Images;
+            }
         }
 
-        public int Add(Image image)
+        public void Add(Image record)
         {
-            if (image.ID == 0)
+            Image dbEntry = Get(record.name);
+            if (dbEntry != null)
             {
-                m_context.Images.Add(image);
+                dbEntry.data = record.data;
             }
             else
             {
-                Image dbEntry = m_context.Images.Find(image.ID);
-                if (dbEntry != null)
-                {
-                    dbEntry.Name = image.Name;
-                    dbEntry.ID = image.ID;
-                    dbEntry.Data = image.Data;
-                    //data
-                }
+                m_context.Images.Add(record);
             }
             m_context.SaveChanges();
-            return image.ID;
         }
 
-        public Image Get(int ID)
+        public Image Get(string name)
         {
-            return m_context.Images.FirstOrDefault((im) => im.ID == ID);
+            return m_images.FirstOrDefault(rec => rec.name == name);
         }
 
-        public Image Remove(int ID)
+        public Image Remove(string name)
         {
-            Image dbEntry = m_context.Images.Find(ID);
+            Image dbEntry = Get(name);
             if (dbEntry != null)
             {
                 m_context.Images.Remove(dbEntry);
                 m_context.SaveChanges();
-                System.Diagnostics.Debug.WriteLine(string.Format("Removed"));
             }
             return dbEntry;
         }

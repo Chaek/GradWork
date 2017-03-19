@@ -82,7 +82,7 @@ namespace WebSocketsClientServer.Behaviors
                 System.Object res = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Object>(e.Data);
                 Image im = Newtonsoft.Json.JsonConvert.DeserializeObject<Image>(res.ToString());
 
-                var fileName = im.Name;
+                var fileName = im.name;
                 var dir = Images.kFolderName + fileName;
                 ProcessStartInfo startInfo = new ProcessStartInfo(dir);
                 //startInfo.EnableRaisingEvents = true;
@@ -99,13 +99,13 @@ namespace WebSocketsClientServer.Behaviors
 
                     Image new_im = new Image()
                     {
-                        ID = im.ID,
-                        Name = im.Name,
-                        Data = "data:image/jpeg;base64," + base64data,
+                        id = im.id,
+                        name = im.name,
+                        data = "data:image/jpeg;base64," + base64data,
                     };
                     ResponseModel<Image> response = new ResponseModel<Image>
                     {
-                        mes = ResponseModel<Image>.COMMAND_STATUS_OK,
+                        mes = ResponseModel<Image>.OK,
                         type = ResponseModel<Image>.IMAGE_SUBMODEL,
                         data = new_im
                     };
@@ -140,9 +140,9 @@ namespace WebSocketsClientServer.Behaviors
                     ConvertHelper.ToBase64StringFromFile(path, out base64data);
                     Image image = new Image
                     {
-                        ID = (record == null)? 0 : record.ImageID,
-                        Name = name,
-                        Data = "data:image/jpeg;base64," + base64data
+                        id = (record == null)? 0 : record.ImageID,
+                        name = name,
+                        data = "data:image/jpeg;base64," + base64data
                     };
 
                     imagesUpdated.Add(image);

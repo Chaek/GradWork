@@ -37,8 +37,8 @@ namespace SportsStore.WebUI.Infrastructure
             });
 
             kernel.Bind<IProductRepository>().ToConstant(mock.Object); */
-            kernel.Bind<IProductRepository>().To<EFProductRepository>().InSingletonScope();
             kernel.Bind<IImageRepository>().To<EFImageRepository>().InSingletonScope();
+            //kernel.Bind<IPictureRepository>().To<EFPictureRepository>().InSingletonScope();
         }
     }
 }
