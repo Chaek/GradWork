@@ -77,11 +77,11 @@
 	            case K.SCAN_MENU:
 	                return React.createElement(C.ScanMenu, null);
 	            case K.IMAGE_LOCAL_MENU:
-	                remotes = state.imageManager[K.LOCAL_IMAGE];
+	                remotes = state.dataManager[K.LOCAL_IMAGE];
 	                records = (remotes !== undefined) ? remotes.records : [];
 	                return React.createElement("div", null, C.ImageLocalMenu(records));
 	            case K.IMAGE_REMOTE_MENU:
-	                remotes = state.imageManager[K.REMOTE_IMAGE];
+	                remotes = state.dataManager[K.REMOTE_IMAGE];
 	                records = (remotes !== undefined) ? remotes.records : [];
 	                return React.createElement("div", null, C.ImageRemoteMenu(records));
 	            default:
@@ -181,6 +181,7 @@
 	exports.ADD = 'ADD';
 	exports.REMOTE_IMAGE = 'REMOTE_IMAGE';
 	exports.LOCAL_IMAGE = 'LOCAL_IMAGE';
+	exports.PRINTER = 'PRINTER';
 
 
 /***/ },
@@ -295,7 +296,7 @@
 	    selectedMenu,
 	    commandInfo,
 	    modelsBySubmodel,
-	    imageManager
+	    dataManager
 	});
 	exports.store = redux_1.createStore(reducer, redux_1.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
 	loggerMiddleware // neat middleware that logs actions
@@ -319,7 +320,7 @@
 	    }
 	}
 	exports.reduceRecords = reduceRecords;
-	function imageRecordRemote(state = { records: [], isRequesting: false }, action) {
+	function processSubdata(state = { records: [], isRequesting: false }, action) {
 	    switch (action.type) {
 	        case K.RECIEVE:
 	            return {
@@ -335,19 +336,19 @@
 	            return state;
 	    }
 	}
-	exports.imageRecordRemote = imageRecordRemote;
-	function imageManager(state = {}, action) {
+	exports.processSubdata = processSubdata;
+	function dataManager(state = {}, action) {
 	    switch (action.type) {
 	        case K.RECIEVE:
 	        case K.REQUEST:
 	        case K.REMOVE:
 	        case K.ADD:
-	            return __assign({}, state, { [action.imageType]: imageRecordRemote(state[action.imageType], action) });
+	            return __assign({}, state, { [action.imageType]: processSubdata(state[action.imageType], action) });
 	        default:
 	            return state;
 	    }
 	}
-	exports.imageManager = imageManager;
+	exports.dataManager = dataManager;
 
 
 /***/ },
@@ -2599,6 +2600,15 @@
 	    };
 	}
 	exports.sendCommandWS = sendCommandWS;
+	/*
+	function PRINT_MESSAGE_ON_LOCAL(mes:string) {
+	    let address =
+	    return function(dispatch:any) {
+	        //SOME dispatch
+	        return WS.SingletonWS.getInstance().send(mes, )
+	    }
+	    
+	}*/
 	function returnFetch(dispatch, address, header, action_ok, action_er) {
 	    return fetch(address, header)
 	        .then(response => response.json())
@@ -2627,6 +2637,20 @@
 	    };
 	}
 	exports.GET_IMAGE_RECORDS_REMOTE = GET_IMAGE_RECORDS_REMOTE;
+	function GET_PRINTERS_INFO_FROM_LOCAL() {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: null
+	    };
+	    let mesJSON = JSON.stringify(mes);
+	    let address = WS.LOCAL_APP_ADRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO;
+	    return function (dispatch) {
+	        //dispatch({ type: K.REQUEST,  imageType:K.LOCAL_IMAGE})
+	        return WS.SingletonWS.getInstance().send(mesJSON, address)
+	            .then(v => reducers_1.store.dispatch({ imageType: K.PRINTER, type: K.RECIEVE, records: v.data }));
+	    };
+	}
 	function GET_IMAGE_RECORDS_LOCAL() {
 	    let mes = {
 	        type: "Something",
@@ -3165,11 +3189,14 @@
 	const K = __webpack_require__(3);
 	//CONTROLLERS
 	exports.IMAGE_CONTROLLER = 'Images';
+	exports.PRINTER_CONTROLLER = 'Printers';
 	//ADDRESSES
 	exports.LOCAL_APP_ADRESS = 'ws://localhost:8000/';
 	//METHODS
 	exports.METHOD_GET_ALL = '/Update';
 	exports.METHOD_EDIT = '/Edit';
+	exports.METHOD_INFO = '/Info';
+	exports.METHOD_PRINT = '/Print';
 	class SingletonWS {
 	    constuctor() { }
 	    static getInstance() {
@@ -3278,7 +3305,7 @@
 	    };
 	    let ACTION = {};
 	    //deepFreeze(BEFORE)
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION)).toEqual(AFTER);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION)).toEqual(AFTER);
 	}
 	function IMAGE_RECORD_REMOTE_RECIEVE() {
 	    let BEFORE = {
@@ -3294,7 +3321,7 @@
 	        records: [4, 3, 2, 1]
 	    };
 	    deepFreeze(BEFORE);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION)).toEqual(AFTER);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION)).toEqual(AFTER);
 	}
 	function IMAGE_RECORD_REMOTE_REQUEST() {
 	    let BEFORE = {
@@ -3309,7 +3336,7 @@
 	        type: K.REQUEST
 	    };
 	    deepFreeze(BEFORE);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION)).toEqual(AFTER);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION)).toEqual(AFTER);
 	}
 	function IMAGE_RECORD_REMOTE_ADD() {
 	    let BEFORE = {
@@ -3348,9 +3375,9 @@
 	        }
 	    };
 	    deepFreeze(BEFORE);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_1)).toEqual(AFTER_1);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_2)).toEqual(AFTER_2);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_3)).toEqual(AFTER_3);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_1)).toEqual(AFTER_1);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_2)).toEqual(AFTER_2);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_3)).toEqual(AFTER_3);
 	}
 	function IMAGE_RECORD_REMOTE_REMOVE() {
 	    let BEFORE = {
@@ -3390,17 +3417,17 @@
 	        name: "4"
 	    };
 	    deepFreeze(BEFORE);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_1)).toEqual(AFTER_1);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_2)).toEqual(AFTER_2);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_3)).toEqual(AFTER_3);
-	    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_4)).toEqual(AFTER_4);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_1)).toEqual(AFTER_1);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_2)).toEqual(AFTER_2);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_3)).toEqual(AFTER_3);
+	    expect(REDUCER.processSubdata(BEFORE, ACTION_4)).toEqual(AFTER_4);
 	}
 	function IMAGE_MANAGER_DEFAULT() {
 	    let BEFORE = undefined;
 	    let AFTER = {};
 	    let ACTION = {};
 	    //deepFreeze(BEFORE);
-	    expect(REDUCER.imageManager(BEFORE, ACTION)).toEqual(AFTER);
+	    expect(REDUCER.dataManager(BEFORE, ACTION)).toEqual(AFTER);
 	}
 	function IMAGE_MANAGER_CAN_SWICTH() {
 	    let BEFORE = {
@@ -3458,9 +3485,9 @@
 	        imageType: "something_4"
 	    };
 	    deepFreeze(BEFORE);
-	    expect(REDUCER.imageManager(BEFORE, ACTION_1)).toEqual(AFTER_1);
-	    expect(REDUCER.imageManager(BEFORE, ACTION_2)).toEqual(AFTER_2);
-	    expect(REDUCER.imageManager(BEFORE, ACTION_3)).toEqual(AFTER_3);
+	    expect(REDUCER.dataManager(BEFORE, ACTION_1)).toEqual(AFTER_1);
+	    expect(REDUCER.dataManager(BEFORE, ACTION_2)).toEqual(AFTER_2);
+	    expect(REDUCER.dataManager(BEFORE, ACTION_3)).toEqual(AFTER_3);
 	}
 	function RUN_ALL_TESTS() {
 	    console.log("//RUN_ALL_TESTS()");

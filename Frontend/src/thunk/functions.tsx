@@ -35,6 +35,18 @@ export function sendCommandWS(command:any, url:string, comType:string) {
     }
 }
 
+/*
+function PRINT_MESSAGE_ON_LOCAL(mes:string) {
+    let address = 
+    return function(dispatch:any) {
+        //SOME dispatch
+        return WS.SingletonWS.getInstance().send(mes, )
+    }
+    
+}*/
+
+
+
 function returnFetch(dispatch:any, address:string, 
     header:any, action_ok:any, action_er?:any) {
     return fetch(address, header)
@@ -59,6 +71,21 @@ export function GET_IMAGE_RECORDS_REMOTE() {
         let header = FETCH.CREATE_HEADER(FETCH.GET, true)
         let action_ok = (json:any) => { return { imageType:K.REMOTE_IMAGE, type: K.RECIEVE, records: json.data } }
         returnFetch(dispatch, address, header, action_ok)
+    }
+}
+
+function GET_PRINTERS_INFO_FROM_LOCAL() {
+    let mes:I.ResponseModel<any> = {
+        type: "Something",
+        mes: "Something",
+        data: null
+    }
+    let mesJSON = JSON.stringify(mes)
+    let address = WS.LOCAL_APP_ADRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO
+    return function(dispatch:any) {
+        //dispatch({ type: K.REQUEST,  imageType:K.LOCAL_IMAGE})
+        return WS.SingletonWS.getInstance().send(mesJSON, address)
+        .then(v=>store.dispatch({ imageType:K.PRINTER, type: K.RECIEVE, records: (v as any).data }))
     }
 }
 

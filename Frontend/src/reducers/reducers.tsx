@@ -115,7 +115,7 @@ const reducer = combineReducers({
     selectedMenu,
     commandInfo,
     modelsBySubmodel, 
-    imageManager
+    dataManager
 })
 
 export const store = createStore(
@@ -146,7 +146,7 @@ export function reduceRecords(state:any[], action:any) {
     }
 }
 
-export function imageRecordRemote(state:any = {records:[], isRequesting:false}, action:any) {
+export function processSubdata(state:any = {records:[], isRequesting:false}, action:any) {
     switch (action.type) {
         case K.RECIEVE:
             return {
@@ -169,7 +169,7 @@ export function imageRecordRemote(state:any = {records:[], isRequesting:false}, 
     }
 }
 
-export function imageManager(state:any = {}, action:any) {
+export function dataManager(state:any = {}, action:any) {
     switch (action.type) {
         case K.RECIEVE:
         case K.REQUEST:
@@ -177,7 +177,7 @@ export function imageManager(state:any = {}, action:any) {
         case K.ADD:
             return {
                 ...state,
-                [action.imageType]: imageRecordRemote(state[action.imageType], action)
+                [action.imageType]: processSubdata(state[action.imageType], action)
             }
         default:
             return state

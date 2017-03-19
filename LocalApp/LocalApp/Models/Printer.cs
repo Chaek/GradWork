@@ -8,9 +8,9 @@ namespace WebSocketsClientServer.Models
 {
     class Printer
     {
-        public string Name { get; set; }
-        public string Status { get; set; }
-        public bool IsDefault { get; set; }
-        public bool IsNetworkPrinter { get; set; }
+        public string name { get; set; }
+        public string status { get; set; }
+        public bool isDefault { get; set; }
+        public bool isNetworkPrinter { get; set; }
     }
 }

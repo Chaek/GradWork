@@ -12,7 +12,7 @@ function IMAGE_RECORD_REMOTE_DEFAULT() {
     }
     let ACTION:any = {}
     //deepFreeze(BEFORE)
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION)).toEqual(AFTER)
+    expect(REDUCER.processSubdata(BEFORE, ACTION)).toEqual(AFTER)
 } 
 
 function IMAGE_RECORD_REMOTE_RECIEVE() {
@@ -30,7 +30,7 @@ function IMAGE_RECORD_REMOTE_RECIEVE() {
     }
 
     deepFreeze(BEFORE);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION)).toEqual(AFTER);
+    expect(REDUCER.processSubdata(BEFORE, ACTION)).toEqual(AFTER);
 }
 
 function IMAGE_RECORD_REMOTE_REQUEST() {
@@ -46,7 +46,7 @@ function IMAGE_RECORD_REMOTE_REQUEST() {
         type:K.REQUEST
     }
     deepFreeze(BEFORE);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION)).toEqual(AFTER);
+    expect(REDUCER.processSubdata(BEFORE, ACTION)).toEqual(AFTER);
 }
 
 function IMAGE_RECORD_REMOTE_ADD() {
@@ -88,9 +88,9 @@ function IMAGE_RECORD_REMOTE_ADD() {
     }
 
     deepFreeze(BEFORE);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_1)).toEqual(AFTER_1);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_2)).toEqual(AFTER_2);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_3)).toEqual(AFTER_3);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_1)).toEqual(AFTER_1);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_2)).toEqual(AFTER_2);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_3)).toEqual(AFTER_3);
 }
 
 function IMAGE_RECORD_REMOTE_REMOVE() {
@@ -131,10 +131,10 @@ function IMAGE_RECORD_REMOTE_REMOVE() {
         name: "4"
     }
     deepFreeze(BEFORE);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_1)).toEqual(AFTER_1);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_2)).toEqual(AFTER_2);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_3)).toEqual(AFTER_3);
-    expect(REDUCER.imageRecordRemote(BEFORE, ACTION_4)).toEqual(AFTER_4);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_1)).toEqual(AFTER_1);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_2)).toEqual(AFTER_2);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_3)).toEqual(AFTER_3);
+    expect(REDUCER.processSubdata(BEFORE, ACTION_4)).toEqual(AFTER_4);
 }
 
 
@@ -143,7 +143,7 @@ function IMAGE_MANAGER_DEFAULT() {
     let AFTER:any = {}
     let ACTION:any = {}
     //deepFreeze(BEFORE);
-    expect(REDUCER.imageManager(BEFORE, ACTION)).toEqual(AFTER);
+    expect(REDUCER.dataManager(BEFORE, ACTION)).toEqual(AFTER);
 }
 
 function IMAGE_MANAGER_CAN_SWICTH() {
@@ -203,9 +203,9 @@ function IMAGE_MANAGER_CAN_SWICTH() {
         imageType:"something_4"
     }
     deepFreeze(BEFORE);
-    expect(REDUCER.imageManager(BEFORE, ACTION_1)).toEqual(AFTER_1);
-    expect(REDUCER.imageManager(BEFORE, ACTION_2)).toEqual(AFTER_2);
-    expect(REDUCER.imageManager(BEFORE, ACTION_3)).toEqual(AFTER_3);
+    expect(REDUCER.dataManager(BEFORE, ACTION_1)).toEqual(AFTER_1);
+    expect(REDUCER.dataManager(BEFORE, ACTION_2)).toEqual(AFTER_2);
+    expect(REDUCER.dataManager(BEFORE, ACTION_3)).toEqual(AFTER_3);
 }
 
 export default function RUN_ALL_TESTS() {

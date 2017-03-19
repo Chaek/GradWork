@@ -85,3 +85,4 @@ export const ADD = 'ADD'
 
 export const REMOTE_IMAGE = 'REMOTE_IMAGE'
 export const LOCAL_IMAGE = 'LOCAL_IMAGE'
+export const PRINTER = 'PRINTER'

@@ -53,12 +53,12 @@ class Main extends React.Component<any, any> {
             case K.SCAN_MENU:
                 return <C.ScanMenu/>
             case K.IMAGE_LOCAL_MENU:
-                remotes = state.imageManager[K.LOCAL_IMAGE]
+                remotes = state.dataManager[K.LOCAL_IMAGE]
                 records = (remotes !== undefined)? remotes.records : []
                 return <div>{C.ImageLocalMenu(records)}</div>
                 
             case K.IMAGE_REMOTE_MENU:
-                remotes = state.imageManager[K.REMOTE_IMAGE]
+                remotes = state.dataManager[K.REMOTE_IMAGE]
                 records = (remotes !== undefined)? remotes.records : []
                 return <div>{C.ImageRemoteMenu(records)}</div>
             default:

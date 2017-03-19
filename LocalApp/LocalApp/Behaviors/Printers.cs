@@ -88,10 +88,10 @@ namespace WebSocketsClientServer.Behaviors
                 {
                     Printer printerObj = new Printer()
                     {
-                        Name = (string)printer.GetPropertyValue("Name"),
-                        Status = (string)printer.GetPropertyValue("Status"),
-                        IsDefault = (bool)printer.GetPropertyValue("Default"),
-                        IsNetworkPrinter = (bool)printer.GetPropertyValue("Network")
+                        name = (string)printer.GetPropertyValue("Name"),
+                        status = (string)printer.GetPropertyValue("Status"),
+                        isDefault = (bool)printer.GetPropertyValue("Default"),
+                        isNetworkPrinter = (bool)printer.GetPropertyValue("Network")
                     };
 
                     printersUpdated.Add(printerObj);
