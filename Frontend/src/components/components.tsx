@@ -4,32 +4,12 @@ import * as I from '../interfaces/interfaces'
 import * as K from '../constants/constants'
 import {store} from '../reducers/reducers'
 import * as T from '../thunk/functions'
+import * as Styles from '../styles/styles'
 
 export const ToMainMenuButton = () =>
     <button onClick = {()=>store.dispatch({type:K.SELECT_MENU, menu:K.MAIN_MENU})}>
     Back
     </button>
-
-/*
-export const UpdateItemPanel = (data:any) =>
-    <div>
-        <button onClick={()=>
-            store.dispatch(T.postItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref))}>
-            Update
-        </button>
-        <button onClick={()=>
-            store.dispatch(T.removeItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref))}>
-            Delete
-        </button>
-        <button onClick={()=>{
-            //bad
-            store.dispatch(T.sendCommandWS(data, 
-            K.URL_IMAGE_EDIT, K.COMMAND_TYPE_EDIT))}}>
-            Edit
-        </button>
-        Status : {data.isActual? K.ACTUAL : K.NOT_ACTUAL}
-    </div>
-*/
 
 export const ImageToolLocal = (record:any) =>
     <div>
@@ -43,6 +23,10 @@ export const ImageToolLocal = (record:any) =>
         <button onClick={()=>store.dispatch(T.EDIT_ON_LOCAL(record))}>
             Edit
         </button>
+
+        <button onClick={()=>store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name))}>
+            Print
+        </button>
     </div>
 
 export const ImageToolRemote = (record:any) =>
@@ -54,23 +38,17 @@ export const ImageToolRemote = (record:any) =>
         <button onClick={()=>store.dispatch(T.REMOVE_IMAGE_REMOTE(record))}>
             Delete
         </button>
+
+        <button onClick={()=>store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name))}>
+            Print
+        </button>
     </div>
 
 
 export const MainMenu = () =>
     <div>
         <h2><p>Main menu</p></h2>
-    
-        <button onClick = {()=>
-                store.dispatch({type:K.SELECT_MENU, menu:K.PRINTER_MENU})}>
-        Printer menu
-        </button>
-
-        <button onClick = {()=>
-                store.dispatch({type:K.SELECT_MENU, menu:K.SCAN_MENU})}>
-        Scan menu
-        </button>
-
+        
         <button onClick = {()=>
                 store.dispatch({type:K.SELECT_MENU, menu:K.IMAGE_REMOTE_MENU})}>
         Image Records Remote Menu
@@ -82,7 +60,7 @@ export const MainMenu = () =>
         </button>
     </div>
 
-export const ImageRemoteMenu = (records:any[]) => 
+export const ImageRemoteMenu = (images:any[], printers:any[], ImageToPrint:string, pickedPrinter:number) => 
     <div>
         <h2><p>Image Remote Menu</p></h2>
         <ToMainMenuButton/>
@@ -93,79 +71,74 @@ export const ImageRemoteMenu = (records:any[]) =>
         </button>
             
         <br/>
-        {records.map(r=>
-            <div>
-            <img key={r.name} src = {r.data}/>
-            {ImageToolRemote(r)}
+        {images.map(r=>
+            <div key={r.name}>
+                <img src = {r.data}/>
+                {ImageToolRemote(r)}
+                {ImageToPrint == r.name? 
+                <div style = {Styles.backdropStyle}>
+                    {PrintPanel(r, printers, pickedPrinter)} </div> : ''}
             </div>
-            )
-        }
+        )}
     </div>
 
-export const ImageLocalMenu = (records:any[]) => 
+//TODO Imagepanels should be united
+export const ImageLocalMenu = (images:any[], printers:any[], ImageToPrint:string, pickedPrinter:number) => 
     <div>
         <h2><p>Image Local Menu</p></h2>
         <ToMainMenuButton/>
 
+        
         <button onClick = {() => 
         store.dispatch(T.GET_IMAGE_RECORDS_LOCAL())}>
         Update from local
         </button>
             
         <br/>
-        {records.map(r=>
-            <div>
-            <img key={r.name} src = {r.data}/>
-            {ImageToolLocal(r)}
+        {images.map(r=>
+            <div key={r.name}>
+                <img src = {r.data}/>
+                {ImageToolLocal(r)}
+                {ImageToPrint == r.name? 
+                <div style = {Styles.backdropStyle}>
+                    {PrintPanel(r, printers, pickedPrinter)} </div> : ''}
             </div>
         )}
     </div>
 
-
-export const PrinterInfo = (item:any) =>
-    <div>
-        <h3><p>Printer Info : </p></h3>
-        {Object.keys(item.item).map(m=><h3><p>{m.toString() + ' : ' + (item.item as any)[m]}</p></h3>)}
-        <input ref = {node=>this.input=node}/>
-        
-        <button onClick = {() => {
-            let mes = this.input.value
-            this.input.value = ''
-            store.dispatch(T.sendCommandWS(mes, K.URL_PRINTER_PRINT, K.COMMAND_TYPE_PRINT))}}>
-        Print
+export const modalWindow = (mes:string) => 
+    <div style={Styles.backdropStyle}>
+        <div style = {Styles.modalStyle}>
+        <h1>{mes}</h1>
+        <br/>
+        <button onClick = {() => store.dispatch({type:K.PRINTING_CHANGE_STATUS, status:K.PRINTING_NOTHING})}>
+        Ok
         </button>
+        </div>
     </div>
 
-   /*     
-export const PrinterMenu = (items:any[]) =>
-    <div>
-        <h2><p>Printer Menu</p></h2>
+export const PrintPanel = (imageToPrint:I.Image, printers:any[], picked:any) => 
+    <div style = {Styles.modalStyle}>
+        <h2><p>Printing {imageToPrint.name} file</p></h2>
+ 
         
         <select onChange = {e=>store.dispatch({
-            type:K.PICK_MODEL,
-            submodel:K.PRINTER_SUBMODEL,
+            type:K.PRINTING_PICK_PRINTER,
             picked:e.target.selectedIndex
         })}>
-            {items.map(m=><option>{m.item.name}</option>)}
+            {printers.map(m=><option key = {m.name}>{m.name}</option>)}
         </select>
 
+        {Object.keys(printers[picked]).map(m=> 
+            <h3 key = {m}><p>{m.toString() + ' : ' + (printers[picked] as any)[m]}</p></h3>)}
+        
         <br/>
-        <ToMainMenuButton/>
-
-        <button onClick = {()=>
-            store.dispatch(T.getModelsWS("Is printer there", K.URL_PRINTER_INFO)) 
-        }>
-        Update printers from local app
+        <button onClick = {()=>store.dispatch({type:K.PRINTING_CHANGE_STATUS, status:K.PRINTING_NOTHING})}>
+            Back
         </button>
-        <br/>      
-    </div>
-*/
-export const ScanMenu = (/*items:any[]*/) =>
-    <div>
-        <h2><p>Scan Menu</p></h2>
-        <ToMainMenuButton/>
-        <button>
-        Scan
+
+        <button onClick = {()=>{store.dispatch(T.PRINT_IMAGE({printer:printers[picked], image:imageToPrint}))}}>
+        Print
         </button>
         <br/>      
     </div>

@@ -13,14 +13,10 @@ import {store} from './reducers/reducers'
 import * as T from './thunk/functions'
 import * as C from './components/components'
 import RUN_ALL_TESTS from './tests/tests'
+import * as Styles from './styles/styles'
 
 
 RUN_ALL_TESTS()
-
-
-
-
-
 
 
 //bad because it would get updated even if it's unnessessary
@@ -28,39 +24,63 @@ RUN_ALL_TESTS()
 class Main extends React.Component<any, any> {
     public render() {
         let state:any = store.getState();
-        let menu = state.selectedMenu
-        let items:any[] = []
-        let item = undefined
-        let i = undefined
-        let status:string = ''
+        let data = []
+        let images = []
+        let printers = []
+        let pickedPrinter = 0
 
-        let remotes = []
-        let records = []
-
-        switch (menu) {    
-            case K.PRINTER_MENU:
-                items = state.modelsBySubmodel[K.PRINTER_SUBMODEL].items
-                //refference
-                i = state.modelsBySubmodel[K.PRINTER_SUBMODEL].picked
-                item = (i === undefined)? K.DEF_PRINTER_INFO : items[i]
-                //console.log(items[i])
-                return (
-                    <div> 
-                        
-                    </div>)
+        switch (state.selectedMenu) {    
             case K.MAIN_MENU:
                 return <C.MainMenu/>
-            case K.SCAN_MENU:
-                return <C.ScanMenu/>
             case K.IMAGE_LOCAL_MENU:
-                remotes = state.dataManager[K.LOCAL_IMAGE]
-                records = (remotes !== undefined)? remotes.records : []
-                return <div>{C.ImageLocalMenu(records)}</div>
+                data = state.dataManager[K.LOCAL_IMAGE]
+                images = (data !== undefined)? data.records : []
+
+                data =  state.dataManager[K.PRINTER]
+                printers = (data !== undefined)? data.records : K.DEF_PRINTERS
+                pickedPrinter = state.printing.picked
+
+                switch (state.printing.status) {
+                    case K.PRINTING_PREPARE:
+                        return <div>{C.ImageLocalMenu(images, printers, state.printing.name, pickedPrinter)}</div>
+                    case K.PRINTING_OK:
+                        return <div>
+                        {C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter)}
+                        {C.modalWindow("Succees")}
+                        </div>
+                    case K.PRINTING_ERROR:
+                        return <div>
+                            {C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter)}
+                            {C.modalWindow("Error")}
+                        </div>
+                    default:
+                        return <div>{C.ImageLocalMenu(images, printers, "", pickedPrinter)}</div>    
+                }
                 
             case K.IMAGE_REMOTE_MENU:
-                remotes = state.dataManager[K.REMOTE_IMAGE]
-                records = (remotes !== undefined)? remotes.records : []
-                return <div>{C.ImageRemoteMenu(records)}</div>
+                data = state.dataManager[K.REMOTE_IMAGE]
+                images = (data !== undefined)? data.records : []
+                
+                data =  state.dataManager[K.PRINTER]
+                printers = (data !== undefined)? data.records : K.DEF_PRINTERS
+                pickedPrinter = state.printing.picked
+
+                switch (state.printing.status) {
+                    case K.PRINTING_PREPARE:
+                        return <div>{C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter)}</div>
+                    case K.PRINTING_OK:
+                        return <div>
+                        {C.ImageRemoteMenu(images, printers, "", pickedPrinter)}
+                        {C.modalWindow("Succees")}
+                        </div>
+                    case K.PRINTING_ERROR:
+                        return <div>
+                            {C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter)}
+                            {C.modalWindow("Error")}
+                        </div>
+                    default:
+                        return <div>{C.ImageRemoteMenu(images, printers, "", pickedPrinter)}</div>    
+                }
             default:
                 return <C.MainMenu/>
         }

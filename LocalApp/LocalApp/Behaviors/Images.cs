@@ -13,7 +13,7 @@ namespace WebSocketsClientServer.Behaviors
     static class Images
     {
         //very bad! use a relevent path
-        static private readonly EFImageRecordsRepository repository = new EFImageRecordsRepository();
+        static private readonly EFImageRecordsRepository repository = null; // new EFImageRecordsRepository();
         static private readonly string kFolderName = "C:/Users/ankar_000/Desktop/gradwork/LocalApp/images/";
         static public void Initialize()
         {
@@ -57,6 +57,7 @@ namespace WebSocketsClientServer.Behaviors
         {
             protected override void OnMessage(MessageEventArgs e)
             {
+                //I don't know why, but the direct conversion from json to responsemodel wasn't allowed
                 System.Object res = Newtonsoft.Json.JsonConvert
                     .DeserializeObject<System.Object>(e.Data);
                 ResponseModel<ImageRecord> response = Newtonsoft.Json.JsonConvert
@@ -136,11 +137,12 @@ namespace WebSocketsClientServer.Behaviors
                 foreach (var path in imagesPaths)
                 {
                     var name = Path.GetFileName(path);
-                    ImageRecord record = repository.Find(name);
+                    //now there is no need in using database
+                    //ImageRecord record = repository.Find(name);
                     ConvertHelper.ToBase64StringFromFile(path, out base64data);
                     Image image = new Image
                     {
-                        id = (record == null)? 0 : record.ImageID,
+                        id = 0, //(record == null)? 0 : record.ImageID,
                         name = name,
                         data = "data:image/jpeg;base64," + base64data
                     };

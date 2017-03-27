@@ -5,7 +5,7 @@ export const IMAGE_CONTROLLER = 'Images'
 export const PRINTER_CONTROLLER = 'Printers'
 
 //ADDRESSES
-export const LOCAL_APP_ADRESS = 'ws://localhost:8000/'
+export const LOCAL_APP_ADDRESS = 'ws://localhost:8000/'
 
 //METHODS
 export const METHOD_GET_ALL = '/Update'

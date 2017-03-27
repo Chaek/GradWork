@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace WebSocketsClientServer.Models
 {
-    class Image
+    class DataToPrint
     {
-        public int id { get; set; }
-        public String name { get; set; }
-        public String data { get; set; }
-
+        public Printer printer { get; set; }
+        public Image image { get; set; }
     }
 }

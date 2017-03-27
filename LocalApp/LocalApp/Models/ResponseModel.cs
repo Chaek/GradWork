@@ -25,8 +25,12 @@ namespace WebSocketsClientServer.Models
         public static readonly string IMAGE_SUBMODEL = "IMAGE";
         public static readonly string PRINTER_SUBMODEL = "PRINTER";
         public static readonly string PRODUCT_SUBMODEL = "PRODUCT";
+
+        
+        ///
         public static readonly string ERROR = "ERROR";
         public static readonly string OK = "OK";
+        public static readonly string PRINTER = "PRINTER";
 
         public string type;
         public String mes;

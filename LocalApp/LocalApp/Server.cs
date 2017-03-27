@@ -17,7 +17,7 @@ namespace WebSocketsClientServer
         static void Main(string[] args)
         {
             //Sychronize database records with local files
-            Images.Initialize();
+            //Images.Initialize();
 
             var wssv = new WebSocketServer("ws://localhost:8000");
             wssv.AddWebSocketService<Printers.Info>("/Printers/Info");

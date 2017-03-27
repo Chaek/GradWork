@@ -50,40 +50,60 @@
 	const K = __webpack_require__(3);
 	const reducers_1 = __webpack_require__(4);
 	const C = __webpack_require__(34);
-	const tests_1 = __webpack_require__(40);
+	const tests_1 = __webpack_require__(41);
 	tests_1.default();
 	//bad because it would get updated even if it's unnessessary
 	//should be used provider instead
 	class Main extends React.Component {
 	    render() {
 	        let state = reducers_1.store.getState();
-	        let menu = state.selectedMenu;
-	        let items = [];
-	        let item = undefined;
-	        let i = undefined;
-	        let status = '';
-	        let remotes = [];
-	        let records = [];
-	        switch (menu) {
-	            case K.PRINTER_MENU:
-	                items = state.modelsBySubmodel[K.PRINTER_SUBMODEL].items;
-	                //refference
-	                i = state.modelsBySubmodel[K.PRINTER_SUBMODEL].picked;
-	                item = (i === undefined) ? K.DEF_PRINTER_INFO : items[i];
-	                //console.log(items[i])
-	                return (React.createElement("div", null));
+	        let data = [];
+	        let images = [];
+	        let printers = [];
+	        let pickedPrinter = 0;
+	        switch (state.selectedMenu) {
 	            case K.MAIN_MENU:
 	                return React.createElement(C.MainMenu, null);
-	            case K.SCAN_MENU:
-	                return React.createElement(C.ScanMenu, null);
 	            case K.IMAGE_LOCAL_MENU:
-	                remotes = state.dataManager[K.LOCAL_IMAGE];
-	                records = (remotes !== undefined) ? remotes.records : [];
-	                return React.createElement("div", null, C.ImageLocalMenu(records));
+	                data = state.dataManager[K.LOCAL_IMAGE];
+	                images = (data !== undefined) ? data.records : [];
+	                data = state.dataManager[K.PRINTER];
+	                printers = (data !== undefined) ? data.records : K.DEF_PRINTERS;
+	                pickedPrinter = state.printing.picked;
+	                switch (state.printing.status) {
+	                    case K.PRINTING_PREPARE:
+	                        return React.createElement("div", null, C.ImageLocalMenu(images, printers, state.printing.name, pickedPrinter));
+	                    case K.PRINTING_OK:
+	                        return React.createElement("div", null,
+	                            C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter),
+	                            C.modalWindow("Succees"));
+	                    case K.PRINTING_ERROR:
+	                        return React.createElement("div", null,
+	                            C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter),
+	                            C.modalWindow("Error"));
+	                    default:
+	                        return React.createElement("div", null, C.ImageLocalMenu(images, printers, "", pickedPrinter));
+	                }
 	            case K.IMAGE_REMOTE_MENU:
-	                remotes = state.dataManager[K.REMOTE_IMAGE];
-	                records = (remotes !== undefined) ? remotes.records : [];
-	                return React.createElement("div", null, C.ImageRemoteMenu(records));
+	                data = state.dataManager[K.REMOTE_IMAGE];
+	                images = (data !== undefined) ? data.records : [];
+	                data = state.dataManager[K.PRINTER];
+	                printers = (data !== undefined) ? data.records : K.DEF_PRINTERS;
+	                pickedPrinter = state.printing.picked;
+	                switch (state.printing.status) {
+	                    case K.PRINTING_PREPARE:
+	                        return React.createElement("div", null, C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter));
+	                    case K.PRINTING_OK:
+	                        return React.createElement("div", null,
+	                            C.ImageRemoteMenu(images, printers, "", pickedPrinter),
+	                            C.modalWindow("Succees"));
+	                    case K.PRINTING_ERROR:
+	                        return React.createElement("div", null,
+	                            C.ImageRemoteMenu(images, printers, state.printing.name, pickedPrinter),
+	                            C.modalWindow("Error"));
+	                    default:
+	                        return React.createElement("div", null, C.ImageRemoteMenu(images, printers, "", pickedPrinter));
+	                }
 	            default:
 	                return React.createElement(C.MainMenu, null);
 	        }
@@ -113,75 +133,42 @@
 /***/ function(module, exports) {
 
 	"use strict";
-	exports.PICK_MODEL = 'PICK_MODEL';
-	exports.RECEIVE_MODEL_LOCAL = 'RECEIVE_MODEL_LOCAL';
-	exports.RECEIVE_MODEL_REMOTE = 'RECEIVE_MODEL_REMOTE';
-	exports.SELECT_SUBMODEL = 'SELECT_SUBMODEL';
-	exports.REQUEST_MODEL = 'REQUEST_MODEL';
-	exports.PREPARE_COMMAND = 'EXECUTE_COMMAND';
-	exports.RECEIVE_COMMAND_STATUS = 'RECEIVE_COMMAND_RESULT';
-	exports.LOAD_MODEL_TO_SERVER = 'LOAD_MODEL_TO_SERVER';
-	exports.CHANGE_ACTUALITY = 'CHANGE_ACTUALITY';
-	exports.CLEAR_SUBMODEL = 'CLEAR_SUBMODEL';
-	exports.REMOVE_ITEM = 'REMOVE_ITEM';
-	exports.UPDATE_ITEM = 'UPDATE_ITEM';
-	exports.ITEM_CHANGE_ACTUALITY = 'ITEM_CHANGE_ACTUALITY';
-	exports.SELECT_MENU = 'SELECT_MENU';
-	exports.IMAGE_MENU = 'IMAGE_MENU';
-	exports.PRINTER_MENU = 'PRINTER_MENU';
-	exports.MAIN_MENU = 'MAIN_MENU';
-	exports.SCAN_MENU = 'SCAN_MENU';
-	exports.IMAGE_REMOTE_MENU = 'IMAGE_REMOTE_MENU';
-	exports.IMAGE_LOCAL_MENU = 'IMAGE_LOCAL_MENU';
-	exports.IMAGE_SUBMODEL = 'IMAGE';
-	exports.PRINTER_SUBMODEL = 'PRINTER';
-	exports.URL_IMAGE_EDIT = 'ws://localhost:8000/Images/Edit';
-	exports.URL_IMAGE_UPDATE = 'ws://localhost:8000/Images/Update';
-	exports.URL_IMAGE_SEND_ID = 'ws://localhost:8000/Images/Synchronize';
-	exports.URL_PRINTER_INFO = 'ws://localhost:8000/Printers/Info';
-	exports.URL_PRINTER_PRINT = 'ws://localhost:8000/Printers/Print';
-	exports.COMMAND_STATUS_NOTHING = 'COMMAND_STATUS_NOTHING';
-	exports.COMMAND_STATUS_FAIL = 'COMMAND_STATUS_NOTHING';
-	exports.COMMAND_STATUS_OK = 'COMMAND_STATUS_OK';
-	exports.COMMAND_STATUS_WAITING = 'COMMAND_STATUS_WAITING';
-	exports.COMMAND_TYPE_NOTHING = 'COMMAND_TYPE_NOTHING';
-	exports.COMMAND_TYPE_PRINT = 'COMMAND_TYPE_PRINT';
-	exports.COMMAND_TYPE_SCAN = 'COMMAND_TYPE_SCAN';
-	exports.COMMAND_TYPE_WAITING = 'COMMAND_TYPE_WAITING';
-	exports.COMMAND_TYPE_EDIT = 'COMMAND_TYPE_EDIT';
-	exports.ACTUAL = 'ACTUAL';
-	exports.NOT_ACTUAL = 'NOT ACTUAL';
 	exports.OK = 'OK';
-	exports.START_MODEL = {
-	    isFetching: false,
-	    items: []
-	};
-	exports.DEF_PRINTER_INFO = {
-	    Ref: 0,
-	    isActual: true,
-	    item: {
-	        Name: "Unknown",
-	        Status: "Unknown",
-	        IsDefault: false,
-	        IsNetworkPrinter: false
+	exports.ERROR = 'ERROR';
+	exports.DEF_PRINTERS = [
+	    {
+	        name: "Unknown",
+	        status: "Unknown",
+	        isDefault: false,
+	        isNetworkPrinter: false
 	    }
-	};
-	exports.START_COMMANDS = {
-	    type: exports.COMMAND_TYPE_NOTHING,
-	    status: exports.COMMAND_STATUS_WAITING,
-	};
-	exports.mes = {
-	    mes: 'hello',
-	    sender: 'frontend'
-	};
+	];
 	//REDUCER CONSTANTS
+	//DATA ACTIONS
 	exports.RECIEVE = 'RECIEVE';
 	exports.REQUEST = 'REQUEST';
 	exports.REMOVE = 'REMOVE';
 	exports.ADD = 'ADD';
+	//Data types
 	exports.REMOTE_IMAGE = 'REMOTE_IMAGE';
 	exports.LOCAL_IMAGE = 'LOCAL_IMAGE';
 	exports.PRINTER = 'PRINTER';
+	//Print status
+	exports.PRINTING_NOTHING = 'NOTHING';
+	exports.PRINTING_PREPARE = 'PREPARE';
+	exports.PRINTING_PRINT = 'PRINTING';
+	exports.PRINTING_ERROR = 'ERROR';
+	exports.PRINTING_OK = 'OK';
+	//Print REDUCER
+	exports.PRINTING_CHANGE_STATUS = 'CHANGE_STATUS';
+	exports.PRINTING_PICK_PRINTER = 'PICK_PRINTER';
+	//SELECT_MENU
+	//action types
+	exports.SELECT_MENU = 'SELECT_MENU';
+	//menu types
+	exports.MAIN_MENU = 'MAIN_MENU';
+	exports.IMAGE_REMOTE_MENU = 'IMAGE_REMOTE_MENU';
+	exports.IMAGE_LOCAL_MENU = 'IMAGE_LOCAL_MENU';
 
 
 /***/ },
@@ -202,59 +189,17 @@
 	const K = __webpack_require__(3);
 	const redux_thunk_1 = __webpack_require__(33);
 	const NOT_FOUND = -1;
-	function items(state, action) {
-	    let i = state.findIndex(v => action.Ref == v.Ref);
-	    ///if (i == -1)
-	    switch (action.type) {
-	        case K.UPDATE_ITEM:
-	            return [...state.slice(0, i),
-	                Object.assign({}, { item: action.item }, { Ref: action.Ref, isActual: false }),
-	                ...state.slice(i + 1)];
-	        case K.REMOVE_ITEM:
-	            return [...state.slice(0, i), ...state.slice(i + 1)];
-	        case K.CHANGE_ACTUALITY:
-	            let new_item = Object.assign({}, state[i].item, { ID: action.ID });
-	            return [...state.slice(0, i),
-	                Object.assign({}, state[i], { item: new_item, isActual: action.actuality }),
-	                ...state.slice(i + 1)];
-	        //Object.assign({}, state, {isActual:action.actuality}) : state 
-	        case K.RECEIVE_MODEL_REMOTE:
-	            return action.model.data.map((v, i) => Object.assign({}, { item: v, isActual: true, Ref: i }));
-	        case K.RECEIVE_MODEL_LOCAL:
-	            //return Object.assign({}, state, {isActual:false, ref:action.ref})
-	            return action.model.data.map((v, i) => Object.assign({}, { item: v, isActual: false, Ref: i }));
-	        default:
-	            return state;
-	    }
-	}
-	function models(state = K.START_MODEL, action) {
-	    switch (action.type) {
-	        case K.PICK_MODEL:
-	            return Object.assign({}, state, { picked: action.picked });
-	        case K.UPDATE_ITEM:
-	        case K.REMOVE_ITEM:
-	        case K.CHANGE_ACTUALITY:
-	            return Object.assign({}, state, { items: items(state.items, action) });
-	        case K.RECEIVE_MODEL_REMOTE:
-	            return {
-	                picked: 0,
-	                isFetching: false,
-	                lastUpdated: Date.now(),
-	                items: items(state.items, action)
-	            };
-	        case K.RECEIVE_MODEL_LOCAL:
-	            return {
-	                picked: 0,
-	                isFetching: false,
-	                lastUpdated: Date.now(),
-	                items: items(state.items, action)
-	            };
-	        case K.REQUEST_MODEL:
-	            return Object.assign({}, state, { isFetching: true });
-	        default:
-	            return state;
-	    }
-	}
+	const loggerMiddleware = createLogger();
+	const reducer = redux_1.combineReducers({
+	    selectedMenu,
+	    //commandInfo,
+	    //modelsBySubmodel, 
+	    dataManager,
+	    printing
+	});
+	exports.store = redux_1.createStore(reducer, redux_1.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
+	loggerMiddleware // neat middleware that logs actions
+	));
 	function selectedMenu(state = K.MAIN_MENU, action) {
 	    switch (action.type) {
 	        case (K.SELECT_MENU):
@@ -263,44 +208,7 @@
 	            return state;
 	    }
 	}
-	function commandInfo(state = K.START_COMMANDS, action) {
-	    switch (action.type) {
-	        case (K.PREPARE_COMMAND):
-	            return Object.assign({}, state, { type: action.comType, status: K.COMMAND_STATUS_WAITING });
-	        case (K.RECEIVE_COMMAND_STATUS):
-	            return Object.assign({}, state, { status: action.status });
-	        default:
-	            return state;
-	    }
-	}
-	function modelsBySubmodel(state = {
-	        [K.IMAGE_SUBMODEL]: K.START_MODEL,
-	        [K.PRINTER_SUBMODEL]: K.START_MODEL,
-	    }, action) {
-	    switch (action.type) {
-	        //case K.REMOVE:
-	        case K.UPDATE_ITEM:
-	        case K.PICK_MODEL:
-	        case K.REMOVE_ITEM:
-	        case K.RECEIVE_MODEL_REMOTE:
-	        case K.RECEIVE_MODEL_LOCAL:
-	        case K.REQUEST_MODEL:
-	        case K.CHANGE_ACTUALITY:
-	            return Object.assign({}, state, { [action.submodel]: models(state[action.submodel], action) });
-	        default:
-	            return state;
-	    }
-	}
-	const loggerMiddleware = createLogger();
-	const reducer = redux_1.combineReducers({
-	    selectedMenu,
-	    commandInfo,
-	    modelsBySubmodel,
-	    dataManager
-	});
-	exports.store = redux_1.createStore(reducer, redux_1.applyMiddleware(redux_thunk_1.default, // lets us dispatch() functions
-	loggerMiddleware // neat middleware that logs actions
-	));
+	exports.selectedMenu = selectedMenu;
 	function reduceRecords(state, action) {
 	    let i = NOT_FOUND;
 	    switch (action.type) {
@@ -337,6 +245,17 @@
 	    }
 	}
 	exports.processSubdata = processSubdata;
+	function printing(state = { picked: 0, status: K.PRINTING_NOTHING, name: "" }, action) {
+	    switch (action.type) {
+	        case K.PRINTING_PICK_PRINTER:
+	            return __assign({}, state, { picked: action.picked });
+	        case K.PRINTING_CHANGE_STATUS:
+	            return __assign({}, state, { status: action.status, name: action.name });
+	        default:
+	            return state;
+	    }
+	}
+	exports.printing = printing;
 	function dataManager(state = {}, action) {
 	    switch (action.type) {
 	        case K.RECIEVE:
@@ -2465,99 +2384,69 @@
 	const K = __webpack_require__(3);
 	const reducers_1 = __webpack_require__(4);
 	const T = __webpack_require__(35);
+	const Styles = __webpack_require__(40);
 	exports.ToMainMenuButton = () => React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.MAIN_MENU }) }, "Back");
-	/*
-	export const UpdateItemPanel = (data:any) =>
-	    <div>
-	        <button onClick={()=>
-	            store.dispatch(T.postItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref))}>
-	            Update
-	        </button>
-	        <button onClick={()=>
-	            store.dispatch(T.removeItemBySubmodel(JSON.stringify(data.item), K.IMAGE_SUBMODEL, data.Ref))}>
-	            Delete
-	        </button>
-	        <button onClick={()=>{
-	            //bad
-	            store.dispatch(T.sendCommandWS(data,
-	            K.URL_IMAGE_EDIT, K.COMMAND_TYPE_EDIT))}}>
-	            Edit
-	        </button>
-	        Status : {data.isActual? K.ACTUAL : K.NOT_ACTUAL}
-	    </div>
-	*/
 	exports.ImageToolLocal = (record) => React.createElement("div", null,
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.POST_IMAGE_REMOTE(record)) }, "Push"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ imageType: K.LOCAL_IMAGE, type: K.REMOVE, name: record.name }) }, "Delete"),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.EDIT_ON_LOCAL(record)) }, "Edit"));
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.EDIT_ON_LOCAL(record)) }, "Edit"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name)) }, "Print"));
 	exports.ImageToolRemote = (record) => React.createElement("div", null,
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.POST_IMAGE_REMOTE(record)) }, "Pull"),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.REMOVE_IMAGE_REMOTE(record)) }, "Delete"));
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.REMOVE_IMAGE_REMOTE(record)) }, "Delete"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name)) }, "Print"));
 	exports.MainMenu = () => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Main menu")),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.PRINTER_MENU }) }, "Printer menu"),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.SCAN_MENU }) }, "Scan menu"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_REMOTE_MENU }) }, "Image Records Remote Menu"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_LOCAL_MENU }) }, "Image Records Local Menu"));
-	exports.ImageRemoteMenu = (records) => React.createElement("div", null,
+	exports.ImageRemoteMenu = (images, printers, ImageToPrint, pickedPrinter) => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Image Remote Menu")),
 	    React.createElement(exports.ToMainMenuButton, null),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_IMAGE_RECORDS_REMOTE()) }, "Update from Remote"),
 	    React.createElement("br", null),
-	    records.map(r => React.createElement("div", null,
-	        React.createElement("img", { key: r.name, src: r.data }),
-	        exports.ImageToolRemote(r))));
-	exports.ImageLocalMenu = (records) => React.createElement("div", null,
+	    images.map(r => React.createElement("div", { key: r.name },
+	        React.createElement("img", { src: r.data }),
+	        exports.ImageToolRemote(r),
+	        ImageToPrint == r.name ?
+	            React.createElement("div", { style: Styles.backdropStyle },
+	                exports.PrintPanel(r, printers, pickedPrinter),
+	                " ") : '')));
+	//TODO Imagepanels should be united
+	exports.ImageLocalMenu = (images, printers, ImageToPrint, pickedPrinter) => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Image Local Menu")),
 	    React.createElement(exports.ToMainMenuButton, null),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_IMAGE_RECORDS_LOCAL()) }, "Update from local"),
 	    React.createElement("br", null),
-	    records.map(r => React.createElement("div", null,
-	        React.createElement("img", { key: r.name, src: r.data }),
-	        exports.ImageToolLocal(r))));
-	exports.PrinterInfo = (item) => React.createElement("div", null,
-	    React.createElement("h3", null,
-	        React.createElement("p", null, "Printer Info : ")),
-	    Object.keys(item.item).map(m => React.createElement("h3", null,
-	        React.createElement("p", null, m.toString() + ' : ' + item.item[m]))),
-	    React.createElement("input", { ref: node => this.input = node }),
-	    React.createElement("button", { onClick: () => {
-	            let mes = this.input.value;
-	            this.input.value = '';
-	            reducers_1.store.dispatch(T.sendCommandWS(mes, K.URL_PRINTER_PRINT, K.COMMAND_TYPE_PRINT));
-	        } }, "Print"));
-	/*
-	export const PrinterMenu = (items:any[]) =>
-	 <div>
-	     <h2><p>Printer Menu</p></h2>
-	     
-	     <select onChange = {e=>store.dispatch({
-	         type:K.PICK_MODEL,
-	         submodel:K.PRINTER_SUBMODEL,
-	         picked:e.target.selectedIndex
-	     })}>
-	         {items.map(m=><option>{m.item.name}</option>)}
-	     </select>
-	
-	     <br/>
-	     <ToMainMenuButton/>
-	
-	     <button onClick = {()=>
-	         store.dispatch(T.getModelsWS("Is printer there", K.URL_PRINTER_INFO))
-	     }>
-	     Update printers from local app
-	     </button>
-	     <br/>
-	 </div>
-	*/
-	exports.ScanMenu = () => React.createElement("div", null,
+	    images.map(r => React.createElement("div", { key: r.name },
+	        React.createElement("img", { src: r.data }),
+	        exports.ImageToolLocal(r),
+	        ImageToPrint == r.name ?
+	            React.createElement("div", { style: Styles.backdropStyle },
+	                exports.PrintPanel(r, printers, pickedPrinter),
+	                " ") : '')));
+	exports.modalWindow = (mes) => React.createElement("div", { style: Styles.backdropStyle },
+	    React.createElement("div", { style: Styles.modalStyle },
+	        React.createElement("h1", null, mes),
+	        React.createElement("br", null),
+	        React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_NOTHING }) }, "Ok")));
+	exports.PrintPanel = (imageToPrint, printers, picked) => React.createElement("div", { style: Styles.modalStyle },
 	    React.createElement("h2", null,
-	        React.createElement("p", null, "Scan Menu")),
-	    React.createElement(exports.ToMainMenuButton, null),
-	    React.createElement("button", null, "Scan"),
+	        React.createElement("p", null,
+	            "Printing ",
+	            imageToPrint.name,
+	            " file")),
+	    React.createElement("select", { onChange: e => reducers_1.store.dispatch({
+	            type: K.PRINTING_PICK_PRINTER,
+	            picked: e.target.selectedIndex
+	        }) }, printers.map(m => React.createElement("option", { key: m.name }, m.name))),
+	    Object.keys(printers[picked]).map(m => React.createElement("h3", { key: m },
+	        React.createElement("p", null, m.toString() + ' : ' + printers[picked][m]))),
+	    React.createElement("br", null),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_NOTHING }) }, "Back"),
+	    React.createElement("button", { onClick: () => { reducers_1.store.dispatch(T.PRINT_IMAGE({ printer: printers[picked], image: imageToPrint })); } }, "Print"),
 	    React.createElement("br", null));
 
 
@@ -2571,44 +2460,6 @@
 	const WS = __webpack_require__(38);
 	const reducers_1 = __webpack_require__(4);
 	const FETCH = __webpack_require__(39);
-	function analyzeMessage(mes, Ref) {
-	    let data = JSON.parse(mes);
-	    let submodel = "";
-	    switch (data.type) {
-	        case K.PRINTER_SUBMODEL:
-	        case K.IMAGE_SUBMODEL:
-	            switch (data.mes) {
-	                case K.COMMAND_STATUS_WAITING:
-	                    break;
-	                case K.COMMAND_STATUS_OK:
-	                    reducers_1.store.dispatch({ Ref, submodel: data.type, type: K.UPDATE_ITEM, item: data.data });
-	                    break;
-	                default:
-	                    reducers_1.store.dispatch({ submodel: data.type, type: K.RECEIVE_MODEL_LOCAL, model: data });
-	            }
-	            break;
-	        default:
-	            break;
-	    }
-	}
-	//Thunk function
-	function sendCommandWS(command, url, comType) {
-	    let jsonCommand = JSON.stringify(command.item);
-	    return function (dispatch) {
-	        dispatch({ comType, type: K.PREPARE_COMMAND });
-	        return WS.SingletonWS.getInstance().send(jsonCommand, url).then(v => analyzeMessage(v, command.Ref));
-	    };
-	}
-	exports.sendCommandWS = sendCommandWS;
-	/*
-	function PRINT_MESSAGE_ON_LOCAL(mes:string) {
-	    let address =
-	    return function(dispatch:any) {
-	        //SOME dispatch
-	        return WS.SingletonWS.getInstance().send(mes, )
-	    }
-	    
-	}*/
 	function returnFetch(dispatch, address, header, action_ok, action_er) {
 	    return fetch(address, header)
 	        .then(response => response.json())
@@ -2627,6 +2478,25 @@
 	        });
 	    });
 	}
+	function PRINT_IMAGE(value) {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: value
+	    };
+	    let json = JSON.stringify(mes);
+	    let address = WS.LOCAL_APP_ADDRESS + WS.PRINTER_CONTROLLER + WS.METHOD_PRINT;
+	    return function (dispatch) {
+	        //can display that printing is going to be started
+	        //now it doesn't matter
+	        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+	        return WS.SingletonWS.getInstance()
+	            .send(json, address)
+	            .then(v => dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_OK }))
+	            .catch(e => dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_ERROR }));
+	    };
+	}
+	exports.PRINT_IMAGE = PRINT_IMAGE;
 	function GET_IMAGE_RECORDS_REMOTE() {
 	    return function (dispatch) {
 	        dispatch({ type: K.REQUEST, imageType: K.REMOTE_IMAGE });
@@ -2637,20 +2507,22 @@
 	    };
 	}
 	exports.GET_IMAGE_RECORDS_REMOTE = GET_IMAGE_RECORDS_REMOTE;
-	function GET_PRINTERS_INFO_FROM_LOCAL() {
+	function GET_PRINTERS_INFO_FROM_LOCAL(name) {
 	    let mes = {
 	        type: "Something",
 	        mes: "Something",
 	        data: null
 	    };
 	    let mesJSON = JSON.stringify(mes);
-	    let address = WS.LOCAL_APP_ADRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO;
+	    let address = WS.LOCAL_APP_ADDRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO;
 	    return function (dispatch) {
-	        //dispatch({ type: K.REQUEST,  imageType:K.LOCAL_IMAGE})
-	        return WS.SingletonWS.getInstance().send(mesJSON, address)
+	        dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_PREPARE, name });
+	        return WS.SingletonWS.getInstance()
+	            .send(mesJSON, address)
 	            .then(v => reducers_1.store.dispatch({ imageType: K.PRINTER, type: K.RECIEVE, records: v.data }));
 	    };
 	}
+	exports.GET_PRINTERS_INFO_FROM_LOCAL = GET_PRINTERS_INFO_FROM_LOCAL;
 	function GET_IMAGE_RECORDS_LOCAL() {
 	    let mes = {
 	        type: "Something",
@@ -2658,10 +2530,11 @@
 	        data: null
 	    };
 	    let mesJSON = JSON.stringify(mes);
-	    let address = WS.LOCAL_APP_ADRESS + WS.IMAGE_CONTROLLER + WS.METHOD_GET_ALL;
+	    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_GET_ALL;
 	    return function (dispatch) {
 	        dispatch({ type: K.REQUEST, imageType: K.LOCAL_IMAGE });
-	        return WS.SingletonWS.getInstance().send(mesJSON, address)
+	        return WS.SingletonWS.getInstance()
+	            .send(mesJSON, address)
 	            .then(v => reducers_1.store.dispatch({ imageType: K.LOCAL_IMAGE, type: K.RECIEVE, records: v.data }));
 	    };
 	}
@@ -2694,10 +2567,11 @@
 	exports.POST_IMAGE_REMOTE = POST_IMAGE_REMOTE;
 	function EDIT_ON_LOCAL(record) {
 	    let json = JSON.stringify(record);
-	    let address = WS.LOCAL_APP_ADRESS + WS.IMAGE_CONTROLLER + WS.METHOD_EDIT;
+	    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_EDIT;
 	    return function (dispatch) {
 	        //dispatch({comType, type: K.PREPARE_COMMAND})
-	        return WS.SingletonWS.getInstance().send(json, address)
+	        return WS.SingletonWS.getInstance()
+	            .send(json, address)
 	            .then(v => reducers_1.store.dispatch({ imageType: K.LOCAL_IMAGE, type: K.ADD, record: v.data }))
 	            .catch(v => { console.log(v.data); });
 	    };
@@ -3191,7 +3065,7 @@
 	exports.IMAGE_CONTROLLER = 'Images';
 	exports.PRINTER_CONTROLLER = 'Printers';
 	//ADDRESSES
-	exports.LOCAL_APP_ADRESS = 'ws://localhost:8000/';
+	exports.LOCAL_APP_ADDRESS = 'ws://localhost:8000/';
 	//METHODS
 	exports.METHOD_GET_ALL = '/Update';
 	exports.METHOD_EDIT = '/Edit';
@@ -3290,12 +3164,36 @@
 
 /***/ },
 /* 40 */
+/***/ function(module, exports) {
+
+	"use strict";
+	exports.backdropStyle = {
+	    position: 'fixed',
+	    top: 0,
+	    bottom: 0,
+	    left: 0,
+	    right: 0,
+	    backgroundColor: 'rgba(0,0,0,0.3)',
+	    padding: 50
+	};
+	exports.modalStyle = {
+	    backgroundColor: '#fff',
+	    borderRadius: 5,
+	    maxWidth: 500,
+	    minHeight: 300,
+	    margin: '0 auto',
+	    padding: 30
+	};
+
+
+/***/ },
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const REDUCER = __webpack_require__(4);
-	const deepFreeze = __webpack_require__(41);
-	const expect = __webpack_require__(42);
+	const deepFreeze = __webpack_require__(42);
+	const expect = __webpack_require__(43);
 	const K = __webpack_require__(3);
 	function IMAGE_RECORD_REMOTE_DEFAULT() {
 	    let BEFORE = undefined;
@@ -3426,7 +3324,7 @@
 	    let BEFORE = undefined;
 	    let AFTER = {};
 	    let ACTION = {};
-	    //deepFreeze(BEFORE);
+	    //deepFreeze(BEFORE)
 	    expect(REDUCER.dataManager(BEFORE, ACTION)).toEqual(AFTER);
 	}
 	function IMAGE_MANAGER_CAN_SWICTH() {
@@ -3489,6 +3387,66 @@
 	    expect(REDUCER.dataManager(BEFORE, ACTION_2)).toEqual(AFTER_2);
 	    expect(REDUCER.dataManager(BEFORE, ACTION_3)).toEqual(AFTER_3);
 	}
+	function PRINTING_DEFAULT() {
+	    let BEFORE = undefined;
+	    let AFTER = {
+	        status: K.PRINTING_NOTHING,
+	        name: "",
+	        picked: 0
+	    };
+	    let ACTION = {};
+	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
+	}
+	function PRINTING_CHANGE_STATUS() {
+	    let BEFORE = {
+	        status: K.PRINTING_PRINT
+	    };
+	    let AFTER = {
+	        status: K.PRINTING_OK,
+	        name: "REFERENCE"
+	    };
+	    let ACTION = {
+	        type: K.PRINTING_CHANGE_STATUS,
+	        status: K.PRINTING_OK,
+	        name: "REFERENCE"
+	    };
+	    deepFreeze(BEFORE);
+	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
+	}
+	function PRINTING_PICK_PRINTER() {
+	    let BEFORE = {
+	        status: K.PRINTING_PRINT,
+	        name: "REFERENCE",
+	        picked: 0
+	    };
+	    let AFTER = {
+	        status: K.PRINTING_PRINT,
+	        name: "REFERENCE",
+	        picked: 10
+	    };
+	    let ACTION = {
+	        type: K.PRINTING_PICK_PRINTER,
+	        picked: 10
+	    };
+	    deepFreeze(BEFORE);
+	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
+	}
+	function SELECTED_MENU_DEFAULT() {
+	    let BEFORE = undefined;
+	    let AFTER = K.MAIN_MENU;
+	    let ACTION = {};
+	    expect(REDUCER.selectedMenu(BEFORE, ACTION)).toEqual(AFTER);
+	}
+	function SELECTED_MENU_SELECT_MENU() {
+	    let BEFORE = K.MAIN_MENU;
+	    let AFTER = K.IMAGE_REMOTE_MENU;
+	    let ACTION = {
+	        type: K.SELECT_MENU,
+	        menu: K.IMAGE_REMOTE_MENU
+	    };
+	    deepFreeze(BEFORE);
+	    expect(REDUCER.selectedMenu(BEFORE, ACTION)).toEqual(AFTER);
+	}
 	function RUN_ALL_TESTS() {
 	    console.log("//RUN_ALL_TESTS()");
 	    console.log("!!!IMAGE_RECORD_REMOTE_TESTS!!!");
@@ -3507,13 +3465,25 @@
 	    console.log("//IMAGE_MANAGER_DEFAULT SUCCESS");
 	    IMAGE_MANAGER_CAN_SWICTH();
 	    console.log("//IMAGE_MANAGER_CAN_SWITCH SUCCESS");
+	    console.log("!!!PRINTING_TESTS!!!");
+	    PRINTING_DEFAULT();
+	    console.log("///PRINTING_DEFAULT SUCCESS");
+	    PRINTING_CHANGE_STATUS();
+	    console.log("///PRINTING_CHANGE_STATUS SUCCESS");
+	    PRINTING_PICK_PRINTER();
+	    console.log("///PRINTING_PICK_PRINTER SUCCESS");
+	    console.log("!!!SELECTED_MENU_TESTS!!!");
+	    SELECTED_MENU_DEFAULT();
+	    console.log("///SELECTED_MENU_DEFAULT SUCCESS");
+	    SELECTED_MENU_SELECT_MENU();
+	    console.log("///SELECTED_MENU_SELECT_MENU SUCCESS");
 	}
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = RUN_ALL_TESTS;
 
 
 /***/ },
-/* 41 */
+/* 42 */
 /***/ function(module, exports) {
 
 	module.exports = function deepFreeze (o) {
@@ -3533,22 +3503,22 @@
 
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var _Expectation = __webpack_require__(43);
+	var _Expectation = __webpack_require__(44);
 	
 	var _Expectation2 = _interopRequireDefault(_Expectation);
 	
-	var _SpyUtils = __webpack_require__(54);
+	var _SpyUtils = __webpack_require__(55);
 	
-	var _assert = __webpack_require__(52);
+	var _assert = __webpack_require__(53);
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
-	var _extend = __webpack_require__(72);
+	var _extend = __webpack_require__(73);
 	
 	var _extend2 = _interopRequireDefault(_extend);
 	
@@ -3568,7 +3538,7 @@
 	module.exports = expect;
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3581,21 +3551,21 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _has = __webpack_require__(44);
+	var _has = __webpack_require__(45);
 	
 	var _has2 = _interopRequireDefault(_has);
 	
-	var _tmatch = __webpack_require__(47);
+	var _tmatch = __webpack_require__(48);
 	
 	var _tmatch2 = _interopRequireDefault(_tmatch);
 	
-	var _assert = __webpack_require__(52);
+	var _assert = __webpack_require__(53);
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
-	var _SpyUtils = __webpack_require__(54);
+	var _SpyUtils = __webpack_require__(55);
 	
-	var _TestUtils = __webpack_require__(59);
+	var _TestUtils = __webpack_require__(60);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -3983,25 +3953,25 @@
 	}exports.default = Expectation;
 
 /***/ },
-/* 44 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var bind = __webpack_require__(45);
+	var bind = __webpack_require__(46);
 	
 	module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
 
 
 /***/ },
-/* 45 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var implementation = __webpack_require__(46);
+	var implementation = __webpack_require__(47);
 	
 	module.exports = Function.prototype.bind || implementation;
 
 
 /***/ },
-/* 46 */
+/* 47 */
 /***/ function(module, exports) {
 
 	var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
@@ -4055,7 +4025,7 @@
 
 
 /***/ },
-/* 47 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, Buffer) {'use strict'
@@ -4213,10 +4183,10 @@
 	  throw new Error('impossible to reach this point')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12), __webpack_require__(48).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12), __webpack_require__(49).Buffer))
 
 /***/ },
-/* 48 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -4229,9 +4199,9 @@
 	
 	'use strict'
 	
-	var base64 = __webpack_require__(49)
-	var ieee754 = __webpack_require__(50)
-	var isArray = __webpack_require__(51)
+	var base64 = __webpack_require__(50)
+	var ieee754 = __webpack_require__(51)
+	var isArray = __webpack_require__(52)
 	
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -6012,7 +5982,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 49 */
+/* 50 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -6132,7 +6102,7 @@
 
 
 /***/ },
-/* 50 */
+/* 51 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -6222,7 +6192,7 @@
 
 
 /***/ },
-/* 51 */
+/* 52 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -6233,7 +6203,7 @@
 
 
 /***/ },
-/* 52 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6242,7 +6212,7 @@
 	  value: true
 	});
 	
-	var _objectInspect = __webpack_require__(53);
+	var _objectInspect = __webpack_require__(54);
 	
 	var _objectInspect2 = _interopRequireDefault(_objectInspect);
 	
@@ -6270,7 +6240,7 @@
 	exports.default = assert;
 
 /***/ },
-/* 53 */
+/* 54 */
 /***/ function(module, exports) {
 
 	var hasMap = typeof Map === 'function' && Map.prototype;
@@ -6483,7 +6453,7 @@
 
 
 /***/ },
-/* 54 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6493,13 +6463,13 @@
 	});
 	exports.spyOn = exports.createSpy = exports.restoreSpies = exports.isSpy = undefined;
 	
-	var _defineProperties = __webpack_require__(55);
+	var _defineProperties = __webpack_require__(56);
 	
-	var _assert = __webpack_require__(52);
+	var _assert = __webpack_require__(53);
 	
 	var _assert2 = _interopRequireDefault(_assert);
 	
-	var _TestUtils = __webpack_require__(59);
+	var _TestUtils = __webpack_require__(60);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -6609,13 +6579,13 @@
 	};
 
 /***/ },
-/* 55 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var keys = __webpack_require__(56);
-	var foreach = __webpack_require__(58);
+	var keys = __webpack_require__(57);
+	var foreach = __webpack_require__(59);
 	var hasSymbols = typeof Symbol === 'function' && typeof Symbol() === 'symbol';
 	
 	var toStr = Object.prototype.toString;
@@ -6671,7 +6641,7 @@
 
 
 /***/ },
-/* 56 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6680,7 +6650,7 @@
 	var has = Object.prototype.hasOwnProperty;
 	var toStr = Object.prototype.toString;
 	var slice = Array.prototype.slice;
-	var isArgs = __webpack_require__(57);
+	var isArgs = __webpack_require__(58);
 	var isEnumerable = Object.prototype.propertyIsEnumerable;
 	var hasDontEnumBug = !isEnumerable.call({ toString: null }, 'toString');
 	var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
@@ -6817,7 +6787,7 @@
 
 
 /***/ },
-/* 57 */
+/* 58 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -6840,7 +6810,7 @@
 
 
 /***/ },
-/* 58 */
+/* 59 */
 /***/ function(module, exports) {
 
 	
@@ -6868,7 +6838,7 @@
 
 
 /***/ },
-/* 59 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6880,15 +6850,15 @@
 	
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 	
-	var _isRegex = __webpack_require__(60);
+	var _isRegex = __webpack_require__(61);
 	
 	var _isRegex2 = _interopRequireDefault(_isRegex);
 	
-	var _why = __webpack_require__(61);
+	var _why = __webpack_require__(62);
 	
 	var _why2 = _interopRequireDefault(_why);
 	
-	var _objectKeys = __webpack_require__(56);
+	var _objectKeys = __webpack_require__(57);
 	
 	var _objectKeys2 = _interopRequireDefault(_objectKeys);
 	
@@ -7019,7 +6989,7 @@
 	};
 
 /***/ },
-/* 60 */
+/* 61 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7044,7 +7014,7 @@
 
 
 /***/ },
-/* 61 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7052,16 +7022,16 @@
 	var ObjectPrototype = Object.prototype;
 	var toStr = ObjectPrototype.toString;
 	var booleanValue = Boolean.prototype.valueOf;
-	var has = __webpack_require__(44);
-	var isArrowFunction = __webpack_require__(62);
-	var isBoolean = __webpack_require__(64);
-	var isDate = __webpack_require__(65);
-	var isGenerator = __webpack_require__(66);
-	var isNumber = __webpack_require__(67);
-	var isRegex = __webpack_require__(60);
-	var isString = __webpack_require__(68);
-	var isSymbol = __webpack_require__(69);
-	var isCallable = __webpack_require__(63);
+	var has = __webpack_require__(45);
+	var isArrowFunction = __webpack_require__(63);
+	var isBoolean = __webpack_require__(65);
+	var isDate = __webpack_require__(66);
+	var isGenerator = __webpack_require__(67);
+	var isNumber = __webpack_require__(68);
+	var isRegex = __webpack_require__(61);
+	var isString = __webpack_require__(69);
+	var isSymbol = __webpack_require__(70);
+	var isCallable = __webpack_require__(64);
 	
 	var isProto = Object.prototype.isPrototypeOf;
 	
@@ -7069,9 +7039,9 @@
 	var functionsHaveNames = foo.name === 'foo';
 	
 	var symbolValue = typeof Symbol === 'function' ? Symbol.prototype.valueOf : null;
-	var symbolIterator = __webpack_require__(70)();
+	var symbolIterator = __webpack_require__(71)();
 	
-	var collectionsForEach = __webpack_require__(71)();
+	var collectionsForEach = __webpack_require__(72)();
 	
 	var getPrototypeOf = Object.getPrototypeOf;
 	if (!getPrototypeOf) {
@@ -7344,12 +7314,12 @@
 
 
 /***/ },
-/* 62 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var isCallable = __webpack_require__(63);
+	var isCallable = __webpack_require__(64);
 	var fnToStr = Function.prototype.toString;
 	var isNonArrowFnRegex = /^\s*function/;
 	var isArrowFnWithParensRegex = /^\([^\)]*\) *=>/;
@@ -7365,7 +7335,7 @@
 
 
 /***/ },
-/* 63 */
+/* 64 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7410,7 +7380,7 @@
 
 
 /***/ },
-/* 64 */
+/* 65 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7437,7 +7407,7 @@
 
 
 /***/ },
-/* 65 */
+/* 66 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7463,7 +7433,7 @@
 
 
 /***/ },
-/* 66 */
+/* 67 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7501,7 +7471,7 @@
 
 
 /***/ },
-/* 67 */
+/* 68 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7527,7 +7497,7 @@
 
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7553,7 +7523,7 @@
 
 
 /***/ },
-/* 69 */
+/* 70 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7586,12 +7556,12 @@
 
 
 /***/ },
-/* 70 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var isSymbol = __webpack_require__(69);
+	var isSymbol = __webpack_require__(70);
 	
 	module.exports = function getSymbolIterator() {
 		var symbolIterator = typeof Symbol === 'function' && isSymbol(Symbol.iterator) ? Symbol.iterator : null;
@@ -7609,7 +7579,7 @@
 
 
 /***/ },
-/* 71 */
+/* 72 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -7640,7 +7610,7 @@
 
 
 /***/ },
-/* 72 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -7649,7 +7619,7 @@
 	  value: true
 	});
 	
-	var _Expectation = __webpack_require__(43);
+	var _Expectation = __webpack_require__(44);
 	
 	var _Expectation2 = _interopRequireDefault(_Expectation);
 	

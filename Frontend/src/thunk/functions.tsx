@@ -5,48 +5,6 @@ import * as WS from '../helpers/websocket'
 import {store} from '../reducers/reducers'
 import * as FETCH from '../helpers/fetchhelper'
 
-function analyzeMessage(mes:any, Ref?:number) {
-    let data:any = JSON.parse(mes)
-    let submodel:string = ""
-    switch (data.type) {
-        case K.PRINTER_SUBMODEL:
-        case K.IMAGE_SUBMODEL:
-            switch(data.mes) {
-                case K.COMMAND_STATUS_WAITING:
-                    break
-                case K.COMMAND_STATUS_OK:
-                    store.dispatch({Ref, submodel:data.type, type: K.UPDATE_ITEM, item:data.data})
-                    break
-                default:
-                    store.dispatch({submodel:data.type, type: K.RECEIVE_MODEL_LOCAL, model: data })
-            }
-            break;
-        default:
-            break;
-    }
-}
-
-//Thunk function
-export function sendCommandWS(command:any, url:string, comType:string) {
-    let jsonCommand:string = JSON.stringify(command.item)
-    return function(dispatch:any) {
-        dispatch({comType, type: K.PREPARE_COMMAND})
-        return WS.SingletonWS.getInstance().send(jsonCommand, url).then(v=>analyzeMessage(v, command.Ref))
-    }
-}
-
-/*
-function PRINT_MESSAGE_ON_LOCAL(mes:string) {
-    let address = 
-    return function(dispatch:any) {
-        //SOME dispatch
-        return WS.SingletonWS.getInstance().send(mes, )
-    }
-    
-}*/
-
-
-
 function returnFetch(dispatch:any, address:string, 
     header:any, action_ok:any, action_er?:any) {
     return fetch(address, header)
@@ -64,6 +22,27 @@ function returnFetch(dispatch:any, address:string,
             })
 }
 
+export function PRINT_IMAGE(value:I.DataToPrint) {
+    let mes:I.ResponseModel<I.DataToPrint> = {
+        type: "Something",
+        mes: "Something",
+        data: value
+    }
+    let json = JSON.stringify(mes)
+    let address = WS.LOCAL_APP_ADDRESS + WS.PRINTER_CONTROLLER + WS.METHOD_PRINT
+    return function(dispatch:any) {
+        //can display that printing is going to be started
+        //now it doesn't matter
+        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+        return WS.SingletonWS.getInstance()
+        .send(json, address)
+        //check response model and display whether it's an error or it's OK
+        //not it's doesn't matter
+        .then(v=>dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_OK}))
+        .catch(e=>dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_ERROR}))
+    }
+}
+
 export function GET_IMAGE_RECORDS_REMOTE() {
     return function(dispatch:any) { 
         dispatch({ type: K.REQUEST, imageType:K.REMOTE_IMAGE})
@@ -74,17 +53,18 @@ export function GET_IMAGE_RECORDS_REMOTE() {
     }
 }
 
-function GET_PRINTERS_INFO_FROM_LOCAL() {
+export function GET_PRINTERS_INFO_FROM_LOCAL(name:any) {
     let mes:I.ResponseModel<any> = {
         type: "Something",
         mes: "Something",
         data: null
     }
     let mesJSON = JSON.stringify(mes)
-    let address = WS.LOCAL_APP_ADRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO
+    let address = WS.LOCAL_APP_ADDRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO
     return function(dispatch:any) {
-        //dispatch({ type: K.REQUEST,  imageType:K.LOCAL_IMAGE})
-        return WS.SingletonWS.getInstance().send(mesJSON, address)
+        dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+        return WS.SingletonWS.getInstance()
+        .send(mesJSON, address)
         .then(v=>store.dispatch({ imageType:K.PRINTER, type: K.RECIEVE, records: (v as any).data }))
     }
 }
@@ -96,10 +76,11 @@ export function GET_IMAGE_RECORDS_LOCAL() {
         data: null
     }
     let mesJSON = JSON.stringify(mes)
-    let address = WS.LOCAL_APP_ADRESS + WS.IMAGE_CONTROLLER + WS.METHOD_GET_ALL
+    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_GET_ALL
     return function(dispatch:any) {
         dispatch({ type: K.REQUEST,  imageType:K.LOCAL_IMAGE})
-        return WS.SingletonWS.getInstance().send(mesJSON, address)
+        return WS.SingletonWS.getInstance()
+        .send(mesJSON, address)
         .then(v=>store.dispatch({ imageType:K.LOCAL_IMAGE, type: K.RECIEVE, records: (v as any).data }))
     }
 }
@@ -130,10 +111,11 @@ export function POST_IMAGE_REMOTE(record:any) {
 
 export function EDIT_ON_LOCAL(record:any) {
     let json = JSON.stringify(record)
-    let address = WS.LOCAL_APP_ADRESS + WS.IMAGE_CONTROLLER + WS.METHOD_EDIT
+    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_EDIT
     return function(dispatch:any) {
         //dispatch({comType, type: K.PREPARE_COMMAND})
-        return WS.SingletonWS.getInstance().send(json, address)
+        return WS.SingletonWS.getInstance()
+        .send(json, address)
         .then(v=>store.dispatch({ imageType:K.LOCAL_IMAGE, type: K.ADD, record: (v as any).data }))
         .catch(v=>{console.log((v as any).data)})
     }

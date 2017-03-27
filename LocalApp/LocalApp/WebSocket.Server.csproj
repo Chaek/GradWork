@@ -68,6 +68,7 @@
     <Compile Include="Concrete\EFDbContext.cs" />
     <Compile Include="Concrete\EFImageRecordsRepository.cs" />
     <Compile Include="Helpers\ConvertHelper.cs" />
+    <Compile Include="Models\DataToPrint.cs" />
     <Compile Include="Models\Image.cs" />
     <Compile Include="Models\ImageRecord.cs" />
     <Compile Include="Models\Printer.cs" />
