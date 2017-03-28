@@ -22,6 +22,27 @@ function returnFetch(dispatch:any, address:string,
             })
 }
 
+export function SCAN_IMAGE(deviceName:string) {
+    let mes:I.ResponseModel<string> = {
+        type: "Something",
+        mes: "Something",
+        data: deviceName
+    }
+    let json = JSON.stringify(mes)
+    let address = WS.LOCAL_APP_ADDRESS + WS.SCANNER_CONTROLLER + WS.METHOD_SCAN
+    return function(dispatch:any) {
+        //can display that printing is going to be started
+        //now it doesn't matter
+        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+        return WS.SingletonWS.getInstance()
+        .send(json, address)
+        //check response model and display whether it's an error or it's OK
+        //not it's doesn't matter
+        .then(v=>console.log(v))
+        .catch(e=>console.log(e))
+    }
+}
+
 export function PRINT_IMAGE(value:I.DataToPrint) {
     let mes:I.ResponseModel<I.DataToPrint> = {
         type: "Something",
@@ -38,8 +59,8 @@ export function PRINT_IMAGE(value:I.DataToPrint) {
         .send(json, address)
         //check response model and display whether it's an error or it's OK
         //not it's doesn't matter
-        .then(v=>dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_OK}))
-        .catch(e=>dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_ERROR}))
+        .then(v=>dispatch({ type: K.PRINTING_COMPLETE}))
+        .catch(e=>dispatch({ type: K.PRINTING_COMPLETE}))
     }
 }
 
@@ -53,6 +74,23 @@ export function GET_IMAGE_RECORDS_REMOTE() {
     }
 }
 
+export function GET_SCAN_INFO_FROM_LOCAL() {
+    let mes:I.ResponseModel<any> = {
+        type: "Something",
+        mes: "Something",
+        data: null
+    }
+    let mesJSON = JSON.stringify(mes)
+    let address = WS.LOCAL_APP_ADDRESS + WS.SCANNER_CONTROLLER + WS.METHOD_INFO
+    return function(dispatch:any) {
+        dispatch({ type: K.SCANNING_PREPARE_TO_SCAN })
+        return WS.SingletonWS.getInstance()
+        .send(mesJSON, address)
+        .then(v=>store.dispatch({ imageType:K.SCANNER, type: K.RECIEVE, records: (v as any).data }))
+        .catch(e=>console.log(e))
+    }
+}
+
 export function GET_PRINTERS_INFO_FROM_LOCAL(name:any) {
     let mes:I.ResponseModel<any> = {
         type: "Something",
@@ -62,10 +100,11 @@ export function GET_PRINTERS_INFO_FROM_LOCAL(name:any) {
     let mesJSON = JSON.stringify(mes)
     let address = WS.LOCAL_APP_ADDRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO
     return function(dispatch:any) {
-        dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+        dispatch({ type: K.PRINTING_PREPARE_TO_PRINT, name })
         return WS.SingletonWS.getInstance()
         .send(mesJSON, address)
         .then(v=>store.dispatch({ imageType:K.PRINTER, type: K.RECIEVE, records: (v as any).data }))
+        .catch(e=>console.log(e))
     }
 }
 
@@ -82,6 +121,7 @@ export function GET_IMAGE_RECORDS_LOCAL() {
         return WS.SingletonWS.getInstance()
         .send(mesJSON, address)
         .then(v=>store.dispatch({ imageType:K.LOCAL_IMAGE, type: K.RECIEVE, records: (v as any).data }))
+        .catch(e=>console.log(e))
     }
 }
 

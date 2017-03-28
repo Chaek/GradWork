@@ -25,6 +25,8 @@ namespace WebSocketsClientServer
             wssv.AddWebSocketService<Images.Synchronize>("/Images/Synchronize");
             wssv.AddWebSocketService<Images.Edit>("/Images/Edit");
             wssv.AddWebSocketService<Printers.Print>("/Printers/Print");
+            wssv.AddWebSocketService<Scanners.Scan>("/Scanners/Scan");
+            wssv.AddWebSocketService<Scanners.Info>("/Scanners/Info");
             wssv.Start();
             
             Console.ReadKey(true);

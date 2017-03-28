@@ -12,6 +12,7 @@ const loggerMiddleware = createLogger()
 
 const reducer = combineReducers({
     selectedMenu,
+    scanning,
     //commandInfo,
     //modelsBySubmodel, 
     dataManager,
@@ -85,12 +86,46 @@ export function printing(state:any = {picked: 0, status:K.PRINTING_NOTHING, name
                 ...state,
                 picked:action.picked
             }
-        case K.PRINTING_CHANGE_STATUS:
+        case K.PRINTING_PREPARE_TO_PRINT:
             return {
-                ...state,
-                status:action.status,
+                picked:0,
+                status:K.PRINTING_PREPARE,
                 name:action.name
             }
+        case K.PRINTING_COMPLETE:
+            return {
+                picked:0,
+                status:K.PRINTING_NOTHING,
+                name:""
+            }
+        default:
+            return state;
+    }
+}
+
+export function scanning(state:any = {image:{}, status:K.SCANNING_NOTHING}, action:any) {
+    switch (action.type) {
+        case K.SCANNING_PREPARE_TO_SCAN:
+            return {
+                image:{},
+                status:K.SCANNING_PREPARE
+            }
+        case K.SCANNING_RECIEVE_OK:
+            return {
+                image:action.image,
+                status:K.SCANNING_OK
+            }
+        case K.SCANNING_RECIEVE_ERROR:
+            return {
+                image:{},
+                status:K.SCANNING_ERROR
+            }
+        case K.SCANNING_COMPLETE:
+            return {
+                image:{},
+                status:K.SCANNING_NOTHING
+            }
+
         default:
             return state;
     }

@@ -60,10 +60,20 @@
 	        let data = [];
 	        let images = [];
 	        let printers = [];
+	        let scanners = [];
 	        let pickedPrinter = 0;
 	        switch (state.selectedMenu) {
 	            case K.MAIN_MENU:
-	                return React.createElement(C.MainMenu, null);
+	                data = state.dataManager[K.SCANNER];
+	                scanners = (data !== undefined) ? data.records : [];
+	                switch (state.scanning.status) {
+	                    case K.SCANNING_PREPARE:
+	                        return React.createElement("div", null,
+	                            C.ScanPanel(scanners),
+	                            React.createElement(C.MainMenu, null));
+	                    case K.SCANNING_NOTHING:
+	                        return React.createElement(C.MainMenu, null);
+	                }
 	            case K.IMAGE_LOCAL_MENU:
 	                data = state.dataManager[K.LOCAL_IMAGE];
 	                images = (data !== undefined) ? data.records : [];
@@ -153,15 +163,17 @@
 	exports.REMOTE_IMAGE = 'REMOTE_IMAGE';
 	exports.LOCAL_IMAGE = 'LOCAL_IMAGE';
 	exports.PRINTER = 'PRINTER';
+	exports.SCANNER = 'SCANNER';
 	//Print status
-	exports.PRINTING_NOTHING = 'NOTHING';
-	exports.PRINTING_PREPARE = 'PREPARE';
-	exports.PRINTING_PRINT = 'PRINTING';
+	exports.PRINTING_NOTHING = 'PRINTING_NOTHING';
+	exports.PRINTING_PREPARE = 'PRINTING_PREPARE';
+	exports.PRINTING_PRINT = 'PRINTING_PRINT';
 	exports.PRINTING_ERROR = 'ERROR';
 	exports.PRINTING_OK = 'OK';
 	//Print REDUCER
-	exports.PRINTING_CHANGE_STATUS = 'CHANGE_STATUS';
-	exports.PRINTING_PICK_PRINTER = 'PICK_PRINTER';
+	exports.PRINTING_COMPLETE = 'PRINTING_COMPLETE';
+	exports.PRINTING_PICK_PRINTER = 'PRINTING_PICK_PRINTER';
+	exports.PRINTING_PREPARE_TO_PRINT = 'PRINTING_PREPARE_TO_PRINT';
 	//SELECT_MENU
 	//action types
 	exports.SELECT_MENU = 'SELECT_MENU';
@@ -169,6 +181,19 @@
 	exports.MAIN_MENU = 'MAIN_MENU';
 	exports.IMAGE_REMOTE_MENU = 'IMAGE_REMOTE_MENU';
 	exports.IMAGE_LOCAL_MENU = 'IMAGE_LOCAL_MENU';
+	//SCAN REDUCER
+	//status
+	exports.SCANNING_NOTHING = 'SCANNING_NOTHING';
+	exports.SCANNING_PREPARE = 'SCANNING_PREPARE';
+	exports.SCANNING_WAITING = 'SCANNING_WAITING';
+	exports.SCANNING_OK = 'OK';
+	exports.SCANNING_ERROR = 'ERROR';
+	//types
+	exports.SCANNING_RECIEVE_OK = 'SCANNING_RECIEVE_OK';
+	exports.SCANNING_RECIEVE_ERROR = 'SCANNING_RECIEVE_ERROR';
+	exports.SCANNING_COMPLETE = 'SCANNING_COMPLETE';
+	exports.SCANNING_PREPARE_TO_SCAN = 'SCANNING_PREPARE_TO_SCAN';
+	exports.SCANNING_WAIT = 'SCANNING_WAIT';
 
 
 /***/ },
@@ -192,6 +217,7 @@
 	const loggerMiddleware = createLogger();
 	const reducer = redux_1.combineReducers({
 	    selectedMenu,
+	    scanning,
 	    //commandInfo,
 	    //modelsBySubmodel, 
 	    dataManager,
@@ -249,13 +275,50 @@
 	    switch (action.type) {
 	        case K.PRINTING_PICK_PRINTER:
 	            return __assign({}, state, { picked: action.picked });
-	        case K.PRINTING_CHANGE_STATUS:
-	            return __assign({}, state, { status: action.status, name: action.name });
+	        case K.PRINTING_PREPARE_TO_PRINT:
+	            return {
+	                picked: 0,
+	                status: K.PRINTING_PREPARE,
+	                name: action.name
+	            };
+	        case K.PRINTING_COMPLETE:
+	            return {
+	                picked: 0,
+	                status: K.PRINTING_NOTHING,
+	                name: ""
+	            };
 	        default:
 	            return state;
 	    }
 	}
 	exports.printing = printing;
+	function scanning(state = { image: {}, status: K.SCANNING_NOTHING }, action) {
+	    switch (action.type) {
+	        case K.SCANNING_PREPARE_TO_SCAN:
+	            return {
+	                image: {},
+	                status: K.SCANNING_PREPARE
+	            };
+	        case K.SCANNING_RECIEVE_OK:
+	            return {
+	                image: action.image,
+	                status: K.SCANNING_OK
+	            };
+	        case K.SCANNING_RECIEVE_ERROR:
+	            return {
+	                image: {},
+	                status: K.SCANNING_ERROR
+	            };
+	        case K.SCANNING_COMPLETE:
+	            return {
+	                image: {},
+	                status: K.SCANNING_NOTHING
+	            };
+	        default:
+	            return state;
+	    }
+	}
+	exports.scanning = scanning;
 	function dataManager(state = {}, action) {
 	    switch (action.type) {
 	        case K.RECIEVE:
@@ -2399,7 +2462,8 @@
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Main menu")),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_REMOTE_MENU }) }, "Image Records Remote Menu"),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_LOCAL_MENU }) }, "Image Records Local Menu"));
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_LOCAL_MENU }) }, "Image Records Local Menu"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_SCAN_INFO_FROM_LOCAL()) }, "Scanning"));
 	exports.ImageRemoteMenu = (images, printers, ImageToPrint, pickedPrinter) => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Image Remote Menu")),
@@ -2431,7 +2495,15 @@
 	    React.createElement("div", { style: Styles.modalStyle },
 	        React.createElement("h1", null, mes),
 	        React.createElement("br", null),
-	        React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_NOTHING }) }, "Ok")));
+	        React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_COMPLETE }) }, "Ok")));
+	exports.ScanPanel = (scanners) => React.createElement("div", { style: Styles.backdropStyle },
+	    React.createElement("div", { style: Styles.modalStyle },
+	        React.createElement("h1", null, "Hello, I'm Scan panel"),
+	        React.createElement("br", null),
+	        React.createElement("select", null, scanners.map(s => React.createElement("option", { key: s }, s))),
+	        React.createElement("br", null),
+	        React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.SCAN_IMAGE("TEST_TEST_TEST")) }, "Scan"),
+	        React.createElement("button", { onClick: () => { reducers_1.store.dispatch({ type: K.SCANNING_COMPLETE }); } }, "back")));
 	exports.PrintPanel = (imageToPrint, printers, picked) => React.createElement("div", { style: Styles.modalStyle },
 	    React.createElement("h2", null,
 	        React.createElement("p", null,
@@ -2445,7 +2517,7 @@
 	    Object.keys(printers[picked]).map(m => React.createElement("h3", { key: m },
 	        React.createElement("p", null, m.toString() + ' : ' + printers[picked][m]))),
 	    React.createElement("br", null),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_NOTHING }) }, "Back"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_COMPLETE }) }, "Back"),
 	    React.createElement("button", { onClick: () => { reducers_1.store.dispatch(T.PRINT_IMAGE({ printer: printers[picked], image: imageToPrint })); } }, "Print"),
 	    React.createElement("br", null));
 
@@ -2478,6 +2550,25 @@
 	        });
 	    });
 	}
+	function SCAN_IMAGE(deviceName) {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: deviceName
+	    };
+	    let json = JSON.stringify(mes);
+	    let address = WS.LOCAL_APP_ADDRESS + WS.SCANNER_CONTROLLER + WS.METHOD_SCAN;
+	    return function (dispatch) {
+	        //can display that printing is going to be started
+	        //now it doesn't matter
+	        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+	        return WS.SingletonWS.getInstance()
+	            .send(json, address)
+	            .then(v => console.log(v))
+	            .catch(e => console.log(e));
+	    };
+	}
+	exports.SCAN_IMAGE = SCAN_IMAGE;
 	function PRINT_IMAGE(value) {
 	    let mes = {
 	        type: "Something",
@@ -2492,8 +2583,8 @@
 	        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
 	        return WS.SingletonWS.getInstance()
 	            .send(json, address)
-	            .then(v => dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_OK }))
-	            .catch(e => dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_ERROR }));
+	            .then(v => dispatch({ type: K.PRINTING_COMPLETE }))
+	            .catch(e => dispatch({ type: K.PRINTING_COMPLETE }));
 	    };
 	}
 	exports.PRINT_IMAGE = PRINT_IMAGE;
@@ -2507,6 +2598,23 @@
 	    };
 	}
 	exports.GET_IMAGE_RECORDS_REMOTE = GET_IMAGE_RECORDS_REMOTE;
+	function GET_SCAN_INFO_FROM_LOCAL() {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: null
+	    };
+	    let mesJSON = JSON.stringify(mes);
+	    let address = WS.LOCAL_APP_ADDRESS + WS.SCANNER_CONTROLLER + WS.METHOD_INFO;
+	    return function (dispatch) {
+	        dispatch({ type: K.SCANNING_PREPARE_TO_SCAN });
+	        return WS.SingletonWS.getInstance()
+	            .send(mesJSON, address)
+	            .then(v => reducers_1.store.dispatch({ imageType: K.SCANNER, type: K.RECIEVE, records: v.data }))
+	            .catch(e => console.log(e));
+	    };
+	}
+	exports.GET_SCAN_INFO_FROM_LOCAL = GET_SCAN_INFO_FROM_LOCAL;
 	function GET_PRINTERS_INFO_FROM_LOCAL(name) {
 	    let mes = {
 	        type: "Something",
@@ -2516,10 +2624,11 @@
 	    let mesJSON = JSON.stringify(mes);
 	    let address = WS.LOCAL_APP_ADDRESS + WS.PRINTER_CONTROLLER + WS.METHOD_INFO;
 	    return function (dispatch) {
-	        dispatch({ type: K.PRINTING_CHANGE_STATUS, status: K.PRINTING_PREPARE, name });
+	        dispatch({ type: K.PRINTING_PREPARE_TO_PRINT, name });
 	        return WS.SingletonWS.getInstance()
 	            .send(mesJSON, address)
-	            .then(v => reducers_1.store.dispatch({ imageType: K.PRINTER, type: K.RECIEVE, records: v.data }));
+	            .then(v => reducers_1.store.dispatch({ imageType: K.PRINTER, type: K.RECIEVE, records: v.data }))
+	            .catch(e => console.log(e));
 	    };
 	}
 	exports.GET_PRINTERS_INFO_FROM_LOCAL = GET_PRINTERS_INFO_FROM_LOCAL;
@@ -2535,7 +2644,8 @@
 	        dispatch({ type: K.REQUEST, imageType: K.LOCAL_IMAGE });
 	        return WS.SingletonWS.getInstance()
 	            .send(mesJSON, address)
-	            .then(v => reducers_1.store.dispatch({ imageType: K.LOCAL_IMAGE, type: K.RECIEVE, records: v.data }));
+	            .then(v => reducers_1.store.dispatch({ imageType: K.LOCAL_IMAGE, type: K.RECIEVE, records: v.data }))
+	            .catch(e => console.log(e));
 	    };
 	}
 	exports.GET_IMAGE_RECORDS_LOCAL = GET_IMAGE_RECORDS_LOCAL;
@@ -3064,6 +3174,7 @@
 	//CONTROLLERS
 	exports.IMAGE_CONTROLLER = 'Images';
 	exports.PRINTER_CONTROLLER = 'Printers';
+	exports.SCANNER_CONTROLLER = 'Scanners';
 	//ADDRESSES
 	exports.LOCAL_APP_ADDRESS = 'ws://localhost:8000/';
 	//METHODS
@@ -3071,6 +3182,7 @@
 	exports.METHOD_EDIT = '/Edit';
 	exports.METHOD_INFO = '/Info';
 	exports.METHOD_PRINT = '/Print';
+	exports.METHOD_SCAN = '/Scan';
 	class SingletonWS {
 	    constuctor() { }
 	    static getInstance() {
@@ -3397,6 +3509,8 @@
 	    let ACTION = {};
 	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
 	}
+	///////////////////////////////////////
+	//not used anymore
 	function PRINTING_CHANGE_STATUS() {
 	    let BEFORE = {
 	        status: K.PRINTING_PRINT
@@ -3406,13 +3520,14 @@
 	        name: "REFERENCE"
 	    };
 	    let ACTION = {
-	        type: K.PRINTING_CHANGE_STATUS,
+	        type: K.PRINTING_COMPLETE,
 	        status: K.PRINTING_OK,
 	        name: "REFERENCE"
 	    };
 	    deepFreeze(BEFORE);
 	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
 	}
+	/////////////////////////////////////////
 	function PRINTING_PICK_PRINTER() {
 	    let BEFORE = {
 	        status: K.PRINTING_PRINT,
@@ -3427,6 +3542,24 @@
 	    let ACTION = {
 	        type: K.PRINTING_PICK_PRINTER,
 	        picked: 10
+	    };
+	    deepFreeze(BEFORE);
+	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
+	}
+	function PRINTING_PREPARE_TO_PRINT() {
+	    let BEFORE = {
+	        status: K.PRINTING_PRINT,
+	        name: "",
+	        picked: 10
+	    };
+	    let AFTER = {
+	        status: K.PRINTING_PREPARE,
+	        name: "REFERENCE",
+	        picked: 0
+	    };
+	    let ACTION = {
+	        type: K.PRINTING_PREPARE_TO_PRINT,
+	        name: "REFERENCE"
 	    };
 	    deepFreeze(BEFORE);
 	    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER);
@@ -3468,10 +3601,12 @@
 	    console.log("!!!PRINTING_TESTS!!!");
 	    PRINTING_DEFAULT();
 	    console.log("///PRINTING_DEFAULT SUCCESS");
-	    PRINTING_CHANGE_STATUS();
-	    console.log("///PRINTING_CHANGE_STATUS SUCCESS");
+	    //PRINTING_CHANGE_STATUS()
+	    //console.log("///PRINTING_CHANGE_STATUS SUCCESS")
 	    PRINTING_PICK_PRINTER();
 	    console.log("///PRINTING_PICK_PRINTER SUCCESS");
+	    PRINTING_PREPARE_TO_PRINT();
+	    console.log("///PRINTING_PREPARE_TO_PRINT SUCCESS");
 	    console.log("!!!SELECTED_MENU_TESTS!!!");
 	    SELECTED_MENU_DEFAULT();
 	    console.log("///SELECTED_MENU_DEFAULT SUCCESS");

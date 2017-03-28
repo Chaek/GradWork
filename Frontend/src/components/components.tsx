@@ -58,6 +58,10 @@ export const MainMenu = () =>
                 store.dispatch({type:K.SELECT_MENU, menu:K.IMAGE_LOCAL_MENU})}>
         Image Records Local Menu
         </button>
+
+        <button onClick = {()=>store.dispatch(T.GET_SCAN_INFO_FROM_LOCAL())}>
+        Scanning
+        </button>
     </div>
 
 export const ImageRemoteMenu = (images:any[], printers:any[], ImageToPrint:string, pickedPrinter:number) => 
@@ -111,9 +115,30 @@ export const modalWindow = (mes:string) =>
         <div style = {Styles.modalStyle}>
         <h1>{mes}</h1>
         <br/>
-        <button onClick = {() => store.dispatch({type:K.PRINTING_CHANGE_STATUS, status:K.PRINTING_NOTHING})}>
+        <button onClick = {() => store.dispatch({type:K.PRINTING_COMPLETE})}>
         Ok
         </button>
+        </div>
+    </div>
+
+export const ScanPanel = (scanners:any[]) =>
+    <div style={Styles.backdropStyle}>
+        <div style={Styles.modalStyle}>
+            <h1>Hello, I'm Scan panel</h1>
+            <br/>
+
+            <select>
+                {scanners.map(s=><option key = {s}>{s}</option>)}
+            </select>
+
+            <br/>
+            <button onClick={()=>store.dispatch(T.SCAN_IMAGE("TEST_TEST_TEST"))}>
+            Scan
+            </button>
+
+            <button onClick = {()=>{store.dispatch({type:K.SCANNING_COMPLETE})}}>
+            back
+            </button>
         </div>
     </div>
 
@@ -121,7 +146,6 @@ export const PrintPanel = (imageToPrint:I.Image, printers:any[], picked:any) =>
     <div style = {Styles.modalStyle}>
         <h2><p>Printing {imageToPrint.name} file</p></h2>
  
-        
         <select onChange = {e=>store.dispatch({
             type:K.PRINTING_PICK_PRINTER,
             picked:e.target.selectedIndex
@@ -133,7 +157,7 @@ export const PrintPanel = (imageToPrint:I.Image, printers:any[], picked:any) =>
             <h3 key = {m}><p>{m.toString() + ' : ' + (printers[picked] as any)[m]}</p></h3>)}
         
         <br/>
-        <button onClick = {()=>store.dispatch({type:K.PRINTING_CHANGE_STATUS, status:K.PRINTING_NOTHING})}>
+        <button onClick = {()=>store.dispatch({type:K.PRINTING_COMPLETE})}>
             Back
         </button>
 

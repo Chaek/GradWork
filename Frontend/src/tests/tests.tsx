@@ -220,6 +220,8 @@ function PRINTING_DEFAULT() {
     expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER)
 }
 
+///////////////////////////////////////
+//not used anymore
 function PRINTING_CHANGE_STATUS() {
     let BEFORE = {
         status: K.PRINTING_PRINT
@@ -229,7 +231,7 @@ function PRINTING_CHANGE_STATUS() {
         name:"REFERENCE"
     }
     let ACTION = {
-        type:K.PRINTING_CHANGE_STATUS,
+        type:K.PRINTING_COMPLETE,
         status:K.PRINTING_OK,
         name:"REFERENCE"
     }
@@ -237,6 +239,7 @@ function PRINTING_CHANGE_STATUS() {
     deepFreeze(BEFORE)
     expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER)
 }
+/////////////////////////////////////////
 
 function PRINTING_PICK_PRINTER() {
     let BEFORE = {
@@ -252,6 +255,25 @@ function PRINTING_PICK_PRINTER() {
     let ACTION = {
         type:K.PRINTING_PICK_PRINTER,
         picked:10
+    }
+    deepFreeze(BEFORE)
+    expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER)
+}
+
+function PRINTING_PREPARE_TO_PRINT() {
+    let BEFORE = {
+        status: K.PRINTING_PRINT,
+        name:"",
+        picked: 10
+    }
+    let AFTER = {
+        status: K.PRINTING_PREPARE,
+        name:"REFERENCE",
+        picked: 0
+    }
+    let ACTION = {
+        type:K.PRINTING_PREPARE_TO_PRINT,
+        name:"REFERENCE"
     }
     deepFreeze(BEFORE)
     expect(REDUCER.printing(BEFORE, ACTION)).toEqual(AFTER)
@@ -299,10 +321,12 @@ export default function RUN_ALL_TESTS() {
     console.log("!!!PRINTING_TESTS!!!")
     PRINTING_DEFAULT()
     console.log("///PRINTING_DEFAULT SUCCESS")
-    PRINTING_CHANGE_STATUS()
-    console.log("///PRINTING_CHANGE_STATUS SUCCESS")
+    //PRINTING_CHANGE_STATUS()
+    //console.log("///PRINTING_CHANGE_STATUS SUCCESS")
     PRINTING_PICK_PRINTER()
     console.log("///PRINTING_PICK_PRINTER SUCCESS")
+    PRINTING_PREPARE_TO_PRINT()
+    console.log("///PRINTING_PREPARE_TO_PRINT SUCCESS")
 
     console.log("!!!SELECTED_MENU_TESTS!!!")
     SELECTED_MENU_DEFAULT()

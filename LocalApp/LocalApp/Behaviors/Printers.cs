@@ -6,6 +6,7 @@ using System.Management;
 using System;
 using System.Drawing;
 using System.IO;
+using System.Printing;
 
 namespace WebSocketsClientServer.Behaviors
 {
@@ -14,7 +15,50 @@ namespace WebSocketsClientServer.Behaviors
 
         public class Print : WebSocketBehavior
         {
-            static int counter = 0;
+            private String SpotTroubleUsingJobAttributes(PrintSystemJobInfo theJob)
+            {
+                if ((theJob.JobStatus & PrintJobStatus.Blocked) == PrintJobStatus.Blocked)
+                {
+                    return "The job is blocked.";
+                }
+                if (((theJob.JobStatus & PrintJobStatus.Completed) == PrintJobStatus.Completed)
+                    ||
+                    ((theJob.JobStatus & PrintJobStatus.Printed) == PrintJobStatus.Printed))
+                {
+                    return "The job has finished. Have user recheck all output bins and be sure the correct printer is being checked.";
+                }
+                if (((theJob.JobStatus & PrintJobStatus.Deleted) == PrintJobStatus.Deleted)
+                    ||
+                    ((theJob.JobStatus & PrintJobStatus.Deleting) == PrintJobStatus.Deleting))
+                {
+                    return "The user or someone with administration rights to the queue has deleted the job. It must be resubmitted.";
+                }
+                if ((theJob.JobStatus & PrintJobStatus.Error) == PrintJobStatus.Error)
+                {
+                    return "The job has errored.";
+                }
+                if ((theJob.JobStatus & PrintJobStatus.Offline) == PrintJobStatus.Offline)
+                {
+                    return "The printer is offline. Have user put it online with printer front panel.";
+                }
+                if ((theJob.JobStatus & PrintJobStatus.PaperOut) == PrintJobStatus.PaperOut)
+                {
+                    return "The printer is out of paper of the size required by the job. Have user add paper.";
+                }
+                if ((theJob.JobStatus & PrintJobStatus.Printing) == PrintJobStatus.Printing)
+                {
+                    return "The job is printing now.";
+                }
+                if ((theJob.JobStatus & PrintJobStatus.Spooling) == PrintJobStatus.Spooling)
+                {
+                    return "The job is spooling now.";
+                }
+                if ((theJob.JobStatus & PrintJobStatus.UserIntervention) == PrintJobStatus.UserIntervention)
+                {
+                    return "The printer needs human intervention.";
+                }
+                else return "Nothing";
+            }
 
             protected override void OnMessage(MessageEventArgs e)
             {
@@ -24,13 +68,12 @@ namespace WebSocketsClientServer.Behaviors
                 DataToPrint data = obj.data;
                 Models.Image imageToPrint = data.image;
                 Printer printerInfo = data.printer;
-                int count = "data:image/jpeg;base64,".Length;
-                //remove redudant part of the image data
-                string base64 = imageToPrint.data.Remove(0, count);
-                
+
+                string base64 = Helpers.ConvertHelper.RemoveBase64Prefix(imageToPrint.data);
                 byte[] bytes = Convert.FromBase64String(base64);
 
                 string file = "../../../images/" + imageToPrint.name;
+                
 
                 using (var pd = new System.Drawing.Printing.PrintDocument())
                 {
@@ -46,14 +89,29 @@ namespace WebSocketsClientServer.Behaviors
                             }
                         }
                     };
-                    
-                    pd.EndPrint += (sender, ev) => {
-                        
+
+                    pd.EndPrint += (sender, ev) =>
+                    {
+                        //try it // should return status of printing
+                        /*
+                        PrintServer myPrintServer = new LocalPrintServer();
+                        PrintQueueCollection myPrintQueues = myPrintServer.GetPrintQueues();
+                        foreach (PrintQueue pq in myPrintQueues)
+                        {
+                            pq.Refresh();
+                            PrintJobInfoCollection pCollection = pq.GetPrintJobInfoCollection();
+                            foreach (PrintSystemJobInfo job in pCollection)
+                            {
+                                var res = SpotTroubleUsingJobAttributes(job);
+                            }
+                        }*/
                     };
-                    
-                    pd.PrinterSettings.PrintToFile = true;
-                    pd.PrinterSettings.PrintFileName = "../../../printed/" + imageToPrint.name + ".oxps";
-                    counter++;
+
+                    if (printerInfo.name == "Microsoft XPS Document Writer")
+                    {
+                        pd.PrinterSettings.PrintToFile = true;
+                        pd.PrinterSettings.PrintFileName = "../../../printed/" + imageToPrint.name + ".oxps";
+                    }
                     pd.PrinterSettings.PrinterName = printerInfo.name;
 
                     try
@@ -71,7 +129,6 @@ namespace WebSocketsClientServer.Behaviors
                     }
                     catch (Exception ex)
                     {
-                        
                         ResponseModel<Exception> response = new ResponseModel<Exception>
                         {
                             mes = ResponseModel<Printer>.ERROR,
@@ -81,7 +138,6 @@ namespace WebSocketsClientServer.Behaviors
 
                         var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
                         Send(json);
-                        
                     }
                 }
             }

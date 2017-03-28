@@ -3,6 +3,8 @@ import * as K from '../constants/constants'
 //CONTROLLERS
 export const IMAGE_CONTROLLER = 'Images'
 export const PRINTER_CONTROLLER = 'Printers'
+export const SCANNER_CONTROLLER = 'Scanners'
+
 
 //ADDRESSES
 export const LOCAL_APP_ADDRESS = 'ws://localhost:8000/'
@@ -12,6 +14,7 @@ export const METHOD_GET_ALL = '/Update'
 export const METHOD_EDIT = '/Edit'
 export const METHOD_INFO = '/Info'
 export const METHOD_PRINT = '/Print'
+export const METHOD_SCAN = '/Scan'
 
 export class SingletonWS {
     

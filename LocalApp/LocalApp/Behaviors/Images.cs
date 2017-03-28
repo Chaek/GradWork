@@ -144,7 +144,7 @@ namespace WebSocketsClientServer.Behaviors
                     {
                         id = 0, //(record == null)? 0 : record.ImageID,
                         name = name,
-                        data = "data:image/jpeg;base64," + base64data
+                        data = ConvertHelper.AddBase64Prefix(base64data)
                     };
 
                     imagesUpdated.Add(image);

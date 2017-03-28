@@ -27,11 +27,19 @@ class Main extends React.Component<any, any> {
         let data = []
         let images = []
         let printers = []
+        let scanners = []
         let pickedPrinter = 0
 
         switch (state.selectedMenu) {    
             case K.MAIN_MENU:
-                return <C.MainMenu/>
+                data = state.dataManager[K.SCANNER]
+                scanners = (data !== undefined)? data.records : []
+                switch (state.scanning.status) {
+                    case K.SCANNING_PREPARE:
+                        return <div>{C.ScanPanel(scanners)}<C.MainMenu/></div>
+                    case K.SCANNING_NOTHING:
+                        return <C.MainMenu/>
+                }
             case K.IMAGE_LOCAL_MENU:
                 data = state.dataManager[K.LOCAL_IMAGE]
                 images = (data !== undefined)? data.records : []

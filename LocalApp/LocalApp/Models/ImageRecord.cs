@@ -10,7 +10,6 @@ namespace WebSocketsClientServer.Models
 {
     public class ImageRecord
     {
-        
         public int ImageID { get; set; }
         [Key]
         public String Name { get; set; }
