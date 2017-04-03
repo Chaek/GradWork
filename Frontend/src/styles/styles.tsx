@@ -16,3 +16,9 @@ export const modalStyle = {
       margin: '0 auto',
       padding: 30
     };
+
+export const scanImageStyle = {
+  maxWidth: 500,
+  maxHeight: 300,
+  padding: 30
+}

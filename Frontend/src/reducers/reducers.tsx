@@ -105,6 +105,11 @@ export function printing(state:any = {picked: 0, status:K.PRINTING_NOTHING, name
 
 export function scanning(state:any = {image:{}, status:K.SCANNING_NOTHING}, action:any) {
     switch (action.type) {
+        case K.SCANNING_WAIT:
+            return {
+                image:{},
+                status:K.SCANNING_WAITING
+            }
         case K.SCANNING_PREPARE_TO_SCAN:
             return {
                 image:{},

@@ -29,17 +29,27 @@ class Main extends React.Component<any, any> {
         let printers = []
         let scanners = []
         let pickedPrinter = 0
+        let image = {}
 
         switch (state.selectedMenu) {    
             case K.MAIN_MENU:
+                
                 data = state.dataManager[K.SCANNER]
                 scanners = (data !== undefined)? data.records : []
                 switch (state.scanning.status) {
                     case K.SCANNING_PREPARE:
-                        return <div>{C.ScanPanel(scanners)}<C.MainMenu/></div>
+                        return <div>{C.ScanPanel("Prepare to scan")}<C.MainMenu/></div>
                     case K.SCANNING_NOTHING:
                         return <C.MainMenu/>
+                    case K.SCANNING_WAITING:
+                        return <div>{C.ScanPanel("Wait for scanning", true)}<C.MainMenu/></div>
+                    case K.SCANNING_OK:
+                        return <div>{C.ScanPanel("Succees", false, state.scanning.image)}<C.MainMenu/></div>
+                    case K.SCANNING_ERROR:
+                        return <div>{C.ScanPanel("Something went wrong")}<C.MainMenu/></div>
+
                 }
+
             case K.IMAGE_LOCAL_MENU:
                 data = state.dataManager[K.LOCAL_IMAGE]
                 images = (data !== undefined)? data.records : []

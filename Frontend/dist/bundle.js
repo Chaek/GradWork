@@ -62,6 +62,7 @@
 	        let printers = [];
 	        let scanners = [];
 	        let pickedPrinter = 0;
+	        let image = {};
 	        switch (state.selectedMenu) {
 	            case K.MAIN_MENU:
 	                data = state.dataManager[K.SCANNER];
@@ -69,10 +70,22 @@
 	                switch (state.scanning.status) {
 	                    case K.SCANNING_PREPARE:
 	                        return React.createElement("div", null,
-	                            C.ScanPanel(scanners),
+	                            C.ScanPanel("Prepare to scan"),
 	                            React.createElement(C.MainMenu, null));
 	                    case K.SCANNING_NOTHING:
 	                        return React.createElement(C.MainMenu, null);
+	                    case K.SCANNING_WAITING:
+	                        return React.createElement("div", null,
+	                            C.ScanPanel("Wait for scanning", true),
+	                            React.createElement(C.MainMenu, null));
+	                    case K.SCANNING_OK:
+	                        return React.createElement("div", null,
+	                            C.ScanPanel("Succees", false, state.scanning.image),
+	                            React.createElement(C.MainMenu, null));
+	                    case K.SCANNING_ERROR:
+	                        return React.createElement("div", null,
+	                            C.ScanPanel("Something went wrong"),
+	                            React.createElement(C.MainMenu, null));
 	                }
 	            case K.IMAGE_LOCAL_MENU:
 	                data = state.dataManager[K.LOCAL_IMAGE];
@@ -294,6 +307,11 @@
 	exports.printing = printing;
 	function scanning(state = { image: {}, status: K.SCANNING_NOTHING }, action) {
 	    switch (action.type) {
+	        case K.SCANNING_WAIT:
+	            return {
+	                image: {},
+	                status: K.SCANNING_WAITING
+	            };
 	        case K.SCANNING_PREPARE_TO_SCAN:
 	            return {
 	                image: {},
@@ -2463,7 +2481,7 @@
 	        React.createElement("p", null, "Main menu")),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_REMOTE_MENU }) }, "Image Records Remote Menu"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.IMAGE_LOCAL_MENU }) }, "Image Records Local Menu"),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_SCAN_INFO_FROM_LOCAL()) }, "Scanning"));
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SCANNING_PREPARE_TO_SCAN }) }, "Scanning"));
 	exports.ImageRemoteMenu = (images, printers, ImageToPrint, pickedPrinter) => React.createElement("div", null,
 	    React.createElement("h2", null,
 	        React.createElement("p", null, "Image Remote Menu")),
@@ -2496,14 +2514,14 @@
 	        React.createElement("h1", null, mes),
 	        React.createElement("br", null),
 	        React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.PRINTING_COMPLETE }) }, "Ok")));
-	exports.ScanPanel = (scanners) => React.createElement("div", { style: Styles.backdropStyle },
+	exports.ScanPanel = (mes = "Prepare to scan", disabledButtons = false, image) => React.createElement("div", { style: Styles.backdropStyle },
 	    React.createElement("div", { style: Styles.modalStyle },
-	        React.createElement("h1", null, "Hello, I'm Scan panel"),
+	        React.createElement("h1", null, mes),
 	        React.createElement("br", null),
-	        React.createElement("select", null, scanners.map(s => React.createElement("option", { key: s }, s))),
+	        (image !== undefined) ? React.createElement("img", { src: image.data, style: Styles.scanImageStyle }) : React.createElement("br", null),
 	        React.createElement("br", null),
-	        React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.SCAN_IMAGE("TEST_TEST_TEST")) }, "Scan"),
-	        React.createElement("button", { onClick: () => { reducers_1.store.dispatch({ type: K.SCANNING_COMPLETE }); } }, "back")));
+	        React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.SCAN_IMAGE("TEST_TEST_TEST")), disabled: disabledButtons }, "Scan"),
+	        React.createElement("button", { onClick: () => { reducers_1.store.dispatch({ type: K.SCANNING_COMPLETE }); }, disabled: disabledButtons }, "back")));
 	exports.PrintPanel = (imageToPrint, printers, picked) => React.createElement("div", { style: Styles.modalStyle },
 	    React.createElement("h2", null,
 	        React.createElement("p", null,
@@ -2561,11 +2579,11 @@
 	    return function (dispatch) {
 	        //can display that printing is going to be started
 	        //now it doesn't matter
-	        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+	        dispatch({ type: K.SCANNING_WAIT });
 	        return WS.SingletonWS.getInstance()
 	            .send(json, address)
-	            .then(v => console.log(v))
-	            .catch(e => console.log(e));
+	            .then(v => reducers_1.store.dispatch({ type: K.SCANNING_RECIEVE_OK, image: v.data }))
+	            .catch(e => reducers_1.store.dispatch({ type: K.SCANNING_RECIEVE_ERROR }));
 	    };
 	}
 	exports.SCAN_IMAGE = SCAN_IMAGE;
@@ -2598,6 +2616,7 @@
 	    };
 	}
 	exports.GET_IMAGE_RECORDS_REMOTE = GET_IMAGE_RECORDS_REMOTE;
+	//obsollete
 	function GET_SCAN_INFO_FROM_LOCAL() {
 	    let mes = {
 	        type: "Something",
@@ -3294,6 +3313,11 @@
 	    maxWidth: 500,
 	    minHeight: 300,
 	    margin: '0 auto',
+	    padding: 30
+	};
+	exports.scanImageStyle = {
+	    maxWidth: 500,
+	    maxHeight: 300,
 	    padding: 30
 	};
 

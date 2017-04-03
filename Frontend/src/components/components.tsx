@@ -59,7 +59,7 @@ export const MainMenu = () =>
         Image Records Local Menu
         </button>
 
-        <button onClick = {()=>store.dispatch(T.GET_SCAN_INFO_FROM_LOCAL())}>
+        <button onClick = {()=>store.dispatch({ type: K.SCANNING_PREPARE_TO_SCAN })}>
         Scanning
         </button>
     </div>
@@ -121,22 +121,21 @@ export const modalWindow = (mes:string) =>
         </div>
     </div>
 
-export const ScanPanel = (scanners:any[]) =>
+export const ScanPanel = (mes:string = "Prepare to scan", 
+    disabledButtons:boolean = false, image?:I.Image) =>
     <div style={Styles.backdropStyle}>
         <div style={Styles.modalStyle}>
-            <h1>Hello, I'm Scan panel</h1>
+            <h1>{mes}</h1>
             <br/>
 
-            <select>
-                {scanners.map(s=><option key = {s}>{s}</option>)}
-            </select>
+            {(image !== undefined)? <img src = {image.data} style = {Styles.scanImageStyle}/> : <br/>}
 
             <br/>
-            <button onClick={()=>store.dispatch(T.SCAN_IMAGE("TEST_TEST_TEST"))}>
+            <button onClick={()=>store.dispatch(T.SCAN_IMAGE("TEST_TEST_TEST"))} disabled={disabledButtons}>
             Scan
             </button>
 
-            <button onClick = {()=>{store.dispatch({type:K.SCANNING_COMPLETE})}}>
+            <button onClick = {()=>{store.dispatch({type:K.SCANNING_COMPLETE})}} disabled={disabledButtons}>
             back
             </button>
         </div>

@@ -33,13 +33,13 @@ export function SCAN_IMAGE(deviceName:string) {
     return function(dispatch:any) {
         //can display that printing is going to be started
         //now it doesn't matter
-        //dispatch({ type: K.PRINTING_CHANGE_STATUS, status:K.PRINTING_PREPARE, name})
+        dispatch({ type: K.SCANNING_WAIT })
         return WS.SingletonWS.getInstance()
         .send(json, address)
         //check response model and display whether it's an error or it's OK
         //not it's doesn't matter
-        .then(v=>console.log(v))
-        .catch(e=>console.log(e))
+        .then(v=>store.dispatch({type:K.SCANNING_RECIEVE_OK, image:(v as any).data}))
+        .catch(e=>store.dispatch({type:K.SCANNING_RECIEVE_ERROR}))
     }
 }
 
@@ -74,6 +74,7 @@ export function GET_IMAGE_RECORDS_REMOTE() {
     }
 }
 
+//obsollete
 export function GET_SCAN_INFO_FROM_LOCAL() {
     let mes:I.ResponseModel<any> = {
         type: "Something",
