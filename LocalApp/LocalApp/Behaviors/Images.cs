@@ -7,18 +7,31 @@ using System.IO;
 using System.Diagnostics;
 using WebSocketsClientServer.Concrete;
 using System.Linq;
+using System;
 
 namespace WebSocketsClientServer.Behaviors
 {
     static class Images
     {
-        //very bad! use a relevent path
+        //local db isn't used anymore
         static private readonly EFImageRecordsRepository repository = null; // new EFImageRecordsRepository();
-        static private readonly string kFolderName = "C:/Users/ankar_000/Desktop/gradwork/LocalApp/images/";
+        static private readonly string kImageDirectory = GetImageDirectory();
+
+        private static string GetImageDirectory()
+        {
+            string path = Directory.GetCurrentDirectory();
+            path = System.IO.Directory.GetParent(path).FullName;
+            path = System.IO.Directory.GetParent(path).FullName;
+            path = System.IO.Directory.GetParent(path).FullName;
+            path += "\\images\\";
+            return path;
+        }
+
+        /*
         static public void Initialize()
         {
             IEnumerable<string> imageNames =
-                    Directory.GetFiles(kFolderName, "*.jpg", SearchOption.TopDirectoryOnly)
+                    Directory.GetFiles(kImageDirectory, "*.jpg", SearchOption.TopDirectoryOnly)
                     .Select(path => Path.GetFileName(path)).ToList();
 
             List<ImageRecord> records_to_add = new List<ImageRecord>();   
@@ -51,12 +64,13 @@ namespace WebSocketsClientServer.Behaviors
             {
                 repository.Remove(name);
             }
-        }
+        }*/
 
         public class Synchronize : WebSocketBehavior
         {
             protected override void OnMessage(MessageEventArgs e)
             {
+                /*
                 //I don't know why, but the direct conversion from json to responsemodel wasn't allowed
                 System.Object res = Newtonsoft.Json.JsonConvert
                     .DeserializeObject<System.Object>(e.Data);
@@ -72,7 +86,47 @@ namespace WebSocketsClientServer.Behaviors
                     data = { }
                 };
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(successfull);
-                Send(json);
+                Send(json);*/
+            }
+        }
+
+        public class Save : WebSocketBehavior
+        {
+            protected override void OnMessage(MessageEventArgs e)
+            {
+
+            }
+        }
+
+        public class Delete : WebSocketBehavior
+        {
+
+            protected override void OnMessage(MessageEventArgs e)
+            {
+                try
+                {
+                    System.Object res = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Object>(e.Data);
+                    ResponseModel<String> mes =
+                        Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseModel<String>>(res.ToString());
+
+                    System.IO.DirectoryInfo di = new DirectoryInfo(kImageDirectory);
+
+                    foreach (FileInfo file in di.GetFiles())
+                    {
+                        if (file.Name == mes.data)
+                        {
+                            file.Delete();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Send(Helpers.ResponseConstructor<Exception>
+                        .GetErrorResponse(ex, ResponseModel<Object>.IMAGE));
+                }
+
+                Send(Helpers.ResponseConstructor<Exception>
+                    .GetSuccessResponse(null, ResponseModel<Object>.IMAGE));
             }
         }
 
@@ -80,11 +134,12 @@ namespace WebSocketsClientServer.Behaviors
         {
             protected override void OnMessage(MessageEventArgs e)
             {
+                //try catch!
                 System.Object res = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Object>(e.Data);
                 Image im = Newtonsoft.Json.JsonConvert.DeserializeObject<Image>(res.ToString());
 
                 var fileName = im.name;
-                var dir = Images.kFolderName + fileName;
+                var dir = Images.kImageDirectory + fileName;
                 ProcessStartInfo startInfo = new ProcessStartInfo(dir);
                 //startInfo.EnableRaisingEvents = true;
                 //startInfo.WorkingDirectory = curDirectory;
@@ -102,26 +157,20 @@ namespace WebSocketsClientServer.Behaviors
                     {
                         id = im.id,
                         name = im.name,
-                        data = "data:image/jpeg;base64," + base64data,
-                    };
-                    ResponseModel<Image> response = new ResponseModel<Image>
-                    {
-                        mes = ResponseModel<Image>.OK,
-                        type = ResponseModel<Image>.IMAGE_SUBMODEL,
-                        data = new_im
+                        data = Helpers.ConvertHelper.AddBase64Prefix(base64data)
                     };
 
-                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
-                        /*CHECK FOR CHANGES*/
-                        //NOW image is returned anyway no matter has it been edited or hasn't
-                        Send(json);
+                    /*CHECK FOR CHANGES*/
+                    //NOW image is returned anyway no matter has it been edited or hasn't
+                    Send(Helpers.ResponseConstructor<Image>
+                        .GetSuccessResponse(new_im, ResponseModel<Object>.IMAGE));  
                 };
             }
         }
 
         public class Update : WebSocketBehavior
         {
-            public readonly string kFolderName = "../../../images";
+            //public readonly string kImageDirectory = "../../../images";
             private IEnumerable<Image> images = null;
 
             //an optimisation should be perfomed in the future
@@ -132,7 +181,7 @@ namespace WebSocketsClientServer.Behaviors
                 string base64data = "";
                 List<Image> imagesUpdated = new List<Image>();
                 IEnumerable<string> imagesPaths =
-                    Directory.GetFiles(kFolderName, "*.jpg", SearchOption.TopDirectoryOnly);
+                    Directory.GetFiles(kImageDirectory, "*.jpg", SearchOption.TopDirectoryOnly);
 
                 foreach (var path in imagesPaths)
                 {
@@ -154,18 +203,17 @@ namespace WebSocketsClientServer.Behaviors
 
             protected override void OnMessage(MessageEventArgs e)
             {
-                UpdateImages();
-
-                ResponseModel<IEnumerable<Image>> res = new ResponseModel<IEnumerable<Image>>
+                try
                 {
-                    mes = ResponseModel<Image>.OK,
-                    type = ResponseModel<Image>.IMAGE_SUBMODEL,
-                    data = images,
-                };
-
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(res);
-
-                Send(json);
+                    UpdateImages();
+                }
+                catch (Exception ex)
+                {
+                    Send(Helpers.ResponseConstructor<Exception>
+                        .GetErrorResponse(ex, ResponseModel<Object>.IMAGE));
+                }
+                Send(Helpers.ResponseConstructor<IEnumerable<Image>>
+                        .GetSuccessResponse(images, ResponseModel<Object>.IMAGE));
             }
         }
     }

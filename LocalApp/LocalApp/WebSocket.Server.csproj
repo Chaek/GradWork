@@ -75,6 +75,7 @@
     <Compile Include="Concrete\EFDbContext.cs" />
     <Compile Include="Concrete\EFImageRecordsRepository.cs" />
     <Compile Include="Helpers\ConvertHelper.cs" />
+    <Compile Include="Helpers\ResponseConstructor.cs" />
     <Compile Include="Helpers\WIAScanner.cs" />
     <Compile Include="Models\DataToPrint.cs" />
     <Compile Include="Models\Image.cs" />

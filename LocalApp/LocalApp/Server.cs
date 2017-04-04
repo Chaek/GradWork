@@ -22,11 +22,14 @@ namespace WebSocketsClientServer
             var wssv = new WebSocketServer("ws://localhost:8000");
             wssv.AddWebSocketService<Printers.Info>("/Printers/Info");
             wssv.AddWebSocketService<Images.Update>("/Images/Update");
-            wssv.AddWebSocketService<Images.Synchronize>("/Images/Synchronize");
+            //wssv.AddWebSocketService<Images.Synchronize>("/Images/Synchronize");
             wssv.AddWebSocketService<Images.Edit>("/Images/Edit");
+            wssv.AddWebSocketService<Images.Delete>("/Images/Delete");
+            wssv.AddWebSocketService<Images.Save>("/Images/Save");
             wssv.AddWebSocketService<Printers.Print>("/Printers/Print");
             wssv.AddWebSocketService<Scanners.Scan>("/Scanners/Scan");
             wssv.AddWebSocketService<Scanners.Info>("/Scanners/Info");
+            
             wssv.Start();
             
             Console.ReadKey(true);

@@ -75,6 +75,7 @@ export function GET_IMAGE_RECORDS_REMOTE() {
 }
 
 //obsollete
+/*
 export function GET_SCAN_INFO_FROM_LOCAL() {
     let mes:I.ResponseModel<any> = {
         type: "Something",
@@ -88,6 +89,23 @@ export function GET_SCAN_INFO_FROM_LOCAL() {
         return WS.SingletonWS.getInstance()
         .send(mesJSON, address)
         .then(v=>store.dispatch({ imageType:K.SCANNER, type: K.RECIEVE, records: (v as any).data }))
+        .catch(e=>console.log(e))
+    }
+}*/
+
+export function REMOVE_IMAGE_LOCAL(name:string) {
+    let mes:I.ResponseModel<string> = {
+        type: "Something",
+        mes: "Something",
+        data: name
+    }
+    let mesJSON = JSON.stringify(mes)
+    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_DELETE
+    return function(dispatch:any) {
+        //dispatch({ type: K.PRINTING_PREPARE_TO_PRINT, name })
+        return WS.SingletonWS.getInstance()
+        .send(mesJSON, address)
+        .then(v=>store.dispatch({type:K.REMOVE, imageType:K.LOCAL_IMAGE, name}))
         .catch(e=>console.log(e))
     }
 }

@@ -17,7 +17,7 @@ export const ImageToolLocal = (record:any) =>
             store.dispatch(T.POST_IMAGE_REMOTE(record))}>
             Push
         </button>
-        <button onClick={()=>store.dispatch({imageType:K.LOCAL_IMAGE, type:K.REMOVE, name:record.name})}>
+        <button onClick={()=>store.dispatch(T.REMOVE_IMAGE_LOCAL(record.name))}>
             Delete
         </button>
         <button onClick={()=>store.dispatch(T.EDIT_ON_LOCAL(record))}>

@@ -10,7 +10,18 @@ namespace WebSocketsClientServer.Helpers
 {
     static class ConvertHelper
     {
-        public static void ToByteArrayFromStream(/*const(error)*/StreamReader sr, out byte[] bytes)
+        public static void ToImageFromBase64(String base64, Image im)
+        {
+            byte[] bytes;
+            ImageToByteArray(im, out bytes);
+            
+            using (MemoryStream ms = new MemoryStream(bytes))
+            {
+                im = Image.FromStream(ms);
+            }
+        }
+
+        public static void ToByteArrayFromStream(StreamReader sr, out byte[] bytes)
         {
             using (var memstream = new MemoryStream())
             {
@@ -53,7 +64,7 @@ namespace WebSocketsClientServer.Helpers
         public static String RemoveBase64Prefix(String str)
         {
             int count = "data:image/jpeg;base64,".Length;
-            //remove redudant part of the image data
+            //remove the redudant part of an image data
             return str.Remove(0, count);
       
         }

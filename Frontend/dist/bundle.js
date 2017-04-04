@@ -2469,7 +2469,7 @@
 	exports.ToMainMenuButton = () => React.createElement("button", { onClick: () => reducers_1.store.dispatch({ type: K.SELECT_MENU, menu: K.MAIN_MENU }) }, "Back");
 	exports.ImageToolLocal = (record) => React.createElement("div", null,
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.POST_IMAGE_REMOTE(record)) }, "Push"),
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch({ imageType: K.LOCAL_IMAGE, type: K.REMOVE, name: record.name }) }, "Delete"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.REMOVE_IMAGE_LOCAL(record.name)) }, "Delete"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.EDIT_ON_LOCAL(record)) }, "Edit"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name)) }, "Print"));
 	exports.ImageToolRemote = (record) => React.createElement("div", null,
@@ -2617,23 +2617,40 @@
 	}
 	exports.GET_IMAGE_RECORDS_REMOTE = GET_IMAGE_RECORDS_REMOTE;
 	//obsollete
-	function GET_SCAN_INFO_FROM_LOCAL() {
-	    let mes = {
+	/*
+	export function GET_SCAN_INFO_FROM_LOCAL() {
+	    let mes:I.ResponseModel<any> = {
 	        type: "Something",
 	        mes: "Something",
 	        data: null
+	    }
+	    let mesJSON = JSON.stringify(mes)
+	    let address = WS.LOCAL_APP_ADDRESS + WS.SCANNER_CONTROLLER + WS.METHOD_INFO
+	    return function(dispatch:any) {
+	        dispatch({ type: K.SCANNING_PREPARE_TO_SCAN })
+	        return WS.SingletonWS.getInstance()
+	        .send(mesJSON, address)
+	        .then(v=>store.dispatch({ imageType:K.SCANNER, type: K.RECIEVE, records: (v as any).data }))
+	        .catch(e=>console.log(e))
+	    }
+	}*/
+	function REMOVE_IMAGE_LOCAL(name) {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: name
 	    };
 	    let mesJSON = JSON.stringify(mes);
-	    let address = WS.LOCAL_APP_ADDRESS + WS.SCANNER_CONTROLLER + WS.METHOD_INFO;
+	    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_DELETE;
 	    return function (dispatch) {
-	        dispatch({ type: K.SCANNING_PREPARE_TO_SCAN });
+	        //dispatch({ type: K.PRINTING_PREPARE_TO_PRINT, name })
 	        return WS.SingletonWS.getInstance()
 	            .send(mesJSON, address)
-	            .then(v => reducers_1.store.dispatch({ imageType: K.SCANNER, type: K.RECIEVE, records: v.data }))
+	            .then(v => reducers_1.store.dispatch({ type: K.REMOVE, imageType: K.LOCAL_IMAGE, name }))
 	            .catch(e => console.log(e));
 	    };
 	}
-	exports.GET_SCAN_INFO_FROM_LOCAL = GET_SCAN_INFO_FROM_LOCAL;
+	exports.REMOVE_IMAGE_LOCAL = REMOVE_IMAGE_LOCAL;
 	function GET_PRINTERS_INFO_FROM_LOCAL(name) {
 	    let mes = {
 	        type: "Something",
@@ -3202,6 +3219,17 @@
 	exports.METHOD_INFO = '/Info';
 	exports.METHOD_PRINT = '/Print';
 	exports.METHOD_SCAN = '/Scan';
+	exports.METHOD_SAVE = '/Save';
+	exports.METHOD_DELETE = '/Delete';
+	//Websocket states
+	var WSState;
+	(function (WSState) {
+	    WSState[WSState["CONNECTING"] = 0] = "CONNECTING";
+	    WSState[WSState["OPEN"] = 1] = "OPEN";
+	    WSState[WSState["CLOSING"] = 2] = "CLOSING";
+	    WSState[WSState["CLOSED"] = 3] = "CLOSED";
+	})(WSState || (WSState = {}));
+	;
 	class SingletonWS {
 	    constuctor() { }
 	    static getInstance() {
@@ -3226,32 +3254,56 @@
 	            };
 	        });
 	    }
+	    close() {
+	        SingletonWS.ws.close();
+	    }
 	    sendWS(mes) {
 	        return new Promise((resolve, reject) => {
 	            SingletonWS.ws.onmessage = (msg) => {
-	                resolve(msg);
+	                //bad should be rewritten
 	                //SingletonWS.ws.close()
+	                resolve(msg);
 	            };
 	            SingletonWS.ws.send(mes);
 	        });
 	    }
 	    send(mes, url) {
+	        //not the best solution
 	        return new Promise((resolve, reject) => {
-	            this.connect(url)
-	                .then(() => this.sendWS(mes))
-	                .then(response => {
-	                let res = JSON.parse(response.data);
-	                if (res.mes == K.OK) {
-	                    resolve(res);
+	            if (url === SingletonWS.currentUrl) {
+	                this.sendWS(mes)
+	                    .then(response => {
+	                    let res = JSON.parse(response.data);
+	                    if (res.mes == K.OK) {
+	                        resolve(res);
+	                    }
+	                    else {
+	                        reject(res);
+	                    }
+	                });
+	            }
+	            else {
+	                if (SingletonWS.ws !== null) {
+	                    SingletonWS.ws.close();
 	                }
-	                else {
-	                    reject(res);
-	                }
-	            });
+	                SingletonWS.currentUrl = url;
+	                this.connect(url)
+	                    .then(() => this.sendWS(mes))
+	                    .then(response => {
+	                    let res = JSON.parse(response.data);
+	                    if (res.mes == K.OK) {
+	                        resolve(res);
+	                    }
+	                    else {
+	                        reject(res);
+	                    }
+	                });
+	            }
 	        });
 	    }
 	}
 	SingletonWS.ws = null;
+	SingletonWS.currentUrl = null;
 	exports.SingletonWS = SingletonWS;
 
 

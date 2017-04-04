@@ -15,11 +15,21 @@ export const METHOD_EDIT = '/Edit'
 export const METHOD_INFO = '/Info'
 export const METHOD_PRINT = '/Print'
 export const METHOD_SCAN = '/Scan'
+export const METHOD_SAVE = '/Save'
+export const METHOD_DELETE = '/Delete'
+
+//Websocket states
+enum WSState {
+    CONNECTING = 0,
+    OPEN, 
+    CLOSING, 
+    CLOSED
+};
 
 export class SingletonWS {
-    
     private static instance:SingletonWS
     private static ws:WebSocket = null
+    private static currentUrl:string = null
 
     private constuctor() {}
 
@@ -52,11 +62,17 @@ export class SingletonWS {
         }); 
     }
 
+    public close() {
+        SingletonWS.ws.close()
+    }
+
     private sendWS(mes:string) {
         return new Promise((resolve, reject) => {
             SingletonWS.ws.onmessage = (msg:MessageEvent) => {
-                resolve(msg)
+                //bad should be rewritten
                 //SingletonWS.ws.close()
+                resolve(msg)
+                
             }
 
             SingletonWS.ws.send(mes)
@@ -64,17 +80,35 @@ export class SingletonWS {
     }
 
     public send(mes:string, url:string) {
+        //not the best solution
         return new Promise((resolve, reject)=>{
-            this.connect(url)
-            .then(()=>this.sendWS(mes))
-            .then(response=>{
-                let res = JSON.parse((response as any).data)
-                if ((res as any).mes == K.OK) {
-                    resolve(res)
-                } else {
-                    reject(res)
+            if (url === SingletonWS.currentUrl) {
+                this.sendWS(mes)
+                .then(response=>{
+                    let res = JSON.parse((response as any).data)
+                    if ((res as any).mes == K.OK) {
+                        resolve(res)
+                    } else {
+                        reject(res)
+                    }
+                })
+            } else {
+                if (SingletonWS.ws !== null) {
+                    SingletonWS.ws.close();
                 }
-            })
+                
+                SingletonWS.currentUrl = url
+                this.connect(url)
+                .then(()=>this.sendWS(mes))
+                .then(response=>{
+                    let res = JSON.parse((response as any).data)
+                    if ((res as any).mes == K.OK) {
+                        resolve(res)
+                    } else {
+                        reject(res)
+                    }
+                })
+            }
         }) 
     }
 }
