@@ -102,10 +102,14 @@ namespace WebSocketsClientServer.Behaviors
 
                     System.Drawing.Image im = null;
                     string base64 = Helpers.ConvertHelper.RemoveBase64Prefix(mes.data.data);
-                    Helpers.ConvertHelper.ToImageFromBase64(base64, out im);
 
-                    string path = kImageDirectory + mes.data.name;
-                    im.Save(path, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    using (var ms = new MemoryStream())
+                    {
+                        Helpers.ConvertHelper.ToImageFromBase64(base64, out im, ms);
+                        string path = kImageDirectory + mes.data.name;
+                        im.Save(path, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    }
+
                 }
                 catch (Exception ex)
                 {

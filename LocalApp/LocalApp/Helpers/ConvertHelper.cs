@@ -10,11 +10,11 @@ namespace WebSocketsClientServer.Helpers
 {
     static class ConvertHelper
     {
-        public static void ToImageFromBase64(String base64, out Image im)
+        public static void ToImageFromBase64(String base64, out Image im, MemoryStream ms)
         {
             //http://stackoverflow.com/questions/40228652/convert-base64-string-to-image-attachment
             byte[] imageBytes = Convert.FromBase64String(base64);
-            var ms = new MemoryStream(imageBytes, 0, imageBytes.Length);
+            //var ms = new MemoryStream(imageBytes, 0, imageBytes.Length);
             ms.Write(imageBytes, 0, imageBytes.Length);
             im = Image.FromStream(ms, true);
         }
