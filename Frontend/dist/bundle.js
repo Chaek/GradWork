@@ -2473,7 +2473,7 @@
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.EDIT_ON_LOCAL(record)) }, "Edit"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name)) }, "Print"));
 	exports.ImageToolRemote = (record) => React.createElement("div", null,
-	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.POST_IMAGE_REMOTE(record)) }, "Pull"),
+	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.SAVE_IMAGE_LOCAL(record)) }, "Pull"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.REMOVE_IMAGE_REMOTE(record)) }, "Delete"),
 	    React.createElement("button", { onClick: () => reducers_1.store.dispatch(T.GET_PRINTERS_INFO_FROM_LOCAL(record.name)) }, "Print"));
 	exports.MainMenu = () => React.createElement("div", null,
@@ -2651,6 +2651,23 @@
 	    };
 	}
 	exports.REMOVE_IMAGE_LOCAL = REMOVE_IMAGE_LOCAL;
+	function SAVE_IMAGE_LOCAL(im) {
+	    let mes = {
+	        type: "Something",
+	        mes: "Something",
+	        data: im
+	    };
+	    let mesJSON = JSON.stringify(mes);
+	    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_SAVE;
+	    return function (dispatch) {
+	        //dispatch({ type: K.PRINTING_PREPARE_TO_PRINT, name })
+	        return WS.SingletonWS.getInstance()
+	            .send(mesJSON, address)
+	            .then(v => reducers_1.store.dispatch({ type: K.ADD, imageType: K.LOCAL_IMAGE, record: im }))
+	            .catch(e => console.log(e));
+	    };
+	}
+	exports.SAVE_IMAGE_LOCAL = SAVE_IMAGE_LOCAL;
 	function GET_PRINTERS_INFO_FROM_LOCAL(name) {
 	    let mes = {
 	        type: "Something",

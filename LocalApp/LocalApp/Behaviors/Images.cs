@@ -94,6 +94,26 @@ namespace WebSocketsClientServer.Behaviors
         {
             protected override void OnMessage(MessageEventArgs e)
             {
+                try
+                {
+                    System.Object res = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Object>(e.Data);
+                    ResponseModel<Image> mes =
+                        Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseModel<Image>>(res.ToString());
+
+                    System.Drawing.Image im = null;
+                    string base64 = Helpers.ConvertHelper.RemoveBase64Prefix(mes.data.data);
+                    Helpers.ConvertHelper.ToImageFromBase64(base64, out im);
+
+                    string path = kImageDirectory + mes.data.name;
+                    im.Save(path, System.Drawing.Imaging.ImageFormat.Jpeg);
+                }
+                catch (Exception ex)
+                {
+                    Send(Helpers.ResponseConstructor<Exception>
+                        .GetErrorResponse(ex, ResponseModel<Object>.IMAGE));
+                }
+                Send(Helpers.ResponseConstructor<Exception>
+                    .GetSuccessResponse(null, ResponseModel<Object>.IMAGE));
 
             }
         }

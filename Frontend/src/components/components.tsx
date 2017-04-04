@@ -32,7 +32,7 @@ export const ImageToolLocal = (record:any) =>
 export const ImageToolRemote = (record:any) =>
     <div>
         <button onClick={()=>
-            store.dispatch(T.POST_IMAGE_REMOTE(record))}>
+            store.dispatch(T.SAVE_IMAGE_LOCAL(record))}>
             Pull
         </button>
         <button onClick={()=>store.dispatch(T.REMOVE_IMAGE_REMOTE(record))}>

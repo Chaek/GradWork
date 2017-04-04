@@ -110,6 +110,23 @@ export function REMOVE_IMAGE_LOCAL(name:string) {
     }
 }
 
+export function SAVE_IMAGE_LOCAL(im:I.Image) {
+    let mes:I.ResponseModel<I.Image> = {
+        type: "Something",
+        mes: "Something",
+        data: im
+    }
+    let mesJSON = JSON.stringify(mes)
+    let address = WS.LOCAL_APP_ADDRESS + WS.IMAGE_CONTROLLER + WS.METHOD_SAVE
+    return function(dispatch:any) {
+        //dispatch({ type: K.PRINTING_PREPARE_TO_PRINT, name })
+        return WS.SingletonWS.getInstance()
+        .send(mesJSON, address)
+        .then(v=>store.dispatch({type:K.ADD, imageType:K.LOCAL_IMAGE, record:im}))
+        .catch(e=>console.log(e))
+    }
+}
+
 export function GET_PRINTERS_INFO_FROM_LOCAL(name:any) {
     let mes:I.ResponseModel<any> = {
         type: "Something",
